@@ -16,13 +16,17 @@ from numpy import arange
 from itertools import chain
 from collections import OrderedDict
 from bokeh.io import output_file, show
-
+from bokeh.io import output_file, show
+from bokeh.layouts import widgetbox
+from bokeh.models.widgets import Div
+from bokeh.models.widgets import Paragraph
+from bokeh.models.widgets import PreText
 
 plot = figure(tools="pan,wheel_zoom,box_zoom,reset")
 plot.add_tools(BoxSelectTool(dimensions="width"))
 output_file("test.html")
 df = pd.read_excel(
-    "dataset.xlsx")
+    r'')
 
 
 # tab 1 - Assignment 4 visualisation
@@ -459,8 +463,16 @@ multi_choice.js_on_change("value", CustomJS(code="""
     console.log('multi_choice: value=' + this.value, this.toString())
 """))
 
+# SELECT menu GUI
+selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
+resultSelect = Select(title="What to show", options=selectoptions)
 
 
+title = Div(
+    text="<b>Visualisation tool of patients tested for Covid-19 of the Hospital Israelita Albert Einstein, at São Paulo, Brazil</b>",
+    style={'font-size': '200%', 'color': 'black'},width = 800)
+
+text = [title]
 
 # plot sizes
 p1.plot_width = 600
@@ -472,17 +484,22 @@ p3.plot_height = 600
 
 # GUI Left column
 controls = [dropdown, spinner, toggle, multi_choice]
-inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
-l1 = layout([[inputs, p1]], sizing_mode='fixed', height=600, width=150)
-l2 = layout([[inputs, p2]], sizing_mode='fixed', height=600, width=150)
-l3 = layout([[inputs, p3]], sizing_mode='fixed', height=600, width=150)
-l4 = layout([[inputs, p4]], sizing_mode='fixed', height=600, width=150)
+#inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
+l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
+l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
+l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
+l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
+
+p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400)
 # Tab setup
 tab1 = Panel(child=l1, title="Bar chart1")
 tab2 = Panel(child=l2, title="Bar chart2")
 tab3 = Panel(child=l3, title="Heat map")
 tab4 = Panel(child=l4, title="Splom")
+tab5 = Panel(child=p, title="All visualisations")
 
-tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
+tabs = Tabs(tabs=[tab5, tab1, tab2, tab3, tab4])
 
-show(tabs)
+
+layout = layout([[text], [controls, tabs]])
+show(layout)
