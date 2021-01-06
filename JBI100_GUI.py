@@ -22,7 +22,7 @@ plot = figure(tools="pan,wheel_zoom,box_zoom,reset")
 plot.add_tools(BoxSelectTool(dimensions="width"))
 output_file("test.html")
 df = pd.read_excel(
-    r'')
+    r'dataset.xlsx')
 
 
 # tab 1 - Assignment 4 visualisation
@@ -212,14 +212,13 @@ p1.add_tools(HoverTool(
         ('age group', '@{age group}'),
         ('percentage', '$y:'),
         ('label', '$name'),
-        ('percentageAge', '@percentageAge')
     ], mode='vline'
 ))
 
 # Visualisation 2 - Bar chart - Assignment 3
-positiveAge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-totalAge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-percentageAge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+positiveAge = [0]*20
+totalAge = [0]*20
+percentageAge = [0]*20
 
 for index, row in df.iterrows():
     for i in range(20):
@@ -233,27 +232,39 @@ for index, row in df.iterrows():
 for i in range(len(positiveAge)):
     percentageAge[i] = positiveAge[i] / totalAge[i] * 100
 
-print(positiveAge)
-print(totalAge)
-print(percentageAge)
+ageQuantile = [str(i) for i in range(20)]
 
-ageQuantile = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
-               "19"]
+print("\ndebugging info:-------------------------")
+print(f"length positiveAge: {len(positiveAge)}")
+print(f"length totalAge: {len(totalAge)}")
+print(f"length percentageAge: {len(percentageAge)}")
+print(f"\nageQuantile({len(ageQuantile)}): {ageQuantile}")
+print("\ndebugging info:-------------------------\n")
 
-p2 = figure(x_range=ageQuantile,  plot_height=250, title="Percentage positive tests per age quartile",
-            toolbar_location="below", tools=[WheelZoomTool(), ResetTool(), PanTool()])
+sourcep2 = ColumnDataSource(data=dict(
+    x = ageQuantile,
+    y = percentageAge
+))
+
+p2 = figure(x_range=ageQuantile,  plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below", tools=[WheelZoomTool(), ResetTool(), PanTool()])
+
+
+p2 = figure(
+    x_range = ageQuantile,
+    y_range = (0, int(max(percentageAge))+1),
+    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below", tools=[WheelZoomTool(), ResetTool(), PanTool()])
 p2.x_range.max_interval = 19
-
-p2.vbar(x=ageQuantile, top=percentageAge, width=0.5)
+#p2.vbar(x=ageQuantile, top=percentageAge, width=0.5)
+p2.vbar(x='x', top='y', width=0.5, source=sourcep2)
 p2.xgrid.grid_line_color = None
-p2.y_range.start = 0
+#p2.y_range.start = 0
 
 
 #hover tool p2
 p2.add_tools(HoverTool(
     tooltips=[
         ('age quantile', '@x'),
-        ('percentage', '$y'),
+        ('percentage','@y')
     ]
 ))
 
