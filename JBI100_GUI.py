@@ -1,11 +1,11 @@
-
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool, CustomJSHover, BoxZoomTool, ResetTool, \
     WheelZoomTool, PanTool, Range1d, DataRange1d
 from bokeh.transform import jitter
 from bokeh.plotting import figure, output_file, show
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.layouts import column, row, layout, widgetbox, grid, GridBox, gridplot
-from bokeh.models import CustomJS, Slider, Toggle, Dropdown, MultiChoice, Spinner, Select, ColumnDataSource, Legend, LegendItem
+from bokeh.models import CustomJS, Slider, Toggle, Dropdown, MultiChoice, Spinner, Select, ColumnDataSource, Legend, \
+    LegendItem
 from bokeh.transform import dodge
 from bokeh.palettes import RdBu as colors
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool
@@ -28,8 +28,7 @@ output_file("test.html")
 df = pd.read_excel(
     r'dataset.xlsx')
 
-
-# tab 1 - Assignment 4 visualisation
+# tab 1 - Assignment 4 visualisation - Stacked bar chart
 regularWardPos = [0, 0, 0, 0, 0]
 semiIntensivePos = [0, 0, 0, 0, 0]
 intensivePos = [0, 0, 0, 0, 0]
@@ -147,13 +146,13 @@ percentageSemiIntensiveNeg = [0, 0, 0, 0, 0]
 percentageIntensiveNeg = [0, 0, 0, 0, 0]
 
 for i in range(len(regularWardPos)):
-    percentageRegularWardPos[i] = regularWardPos[i] / totalAgePos[i] * 100
-    percentageSemiIntensivePos[i] = semiIntensivePos[i] / totalAgePos[i] * 100
-    percentageIntensivePos[i] = intensivePos[i] / totalAgePos[i] * 100
+    percentageRegularWardPos[i] = regularWardPos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+    percentageSemiIntensivePos[i] = semiIntensivePos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+    percentageIntensivePos[i] = intensivePos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
 
-    percentageRegularWardNeg[i] = regularWardNeg[i] / totalAgeNeg[i] * 100
-    percentageSemiIntensiveNeg[i] = semiIntensiveNeg[i] / totalAgeNeg[i] * 100
-    percentageIntensiveNeg[i] = intensiveNeg[i] / totalAgeNeg[i] * 100
+    percentageRegularWardNeg[i] = regularWardNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+    percentageSemiIntensiveNeg[i] = semiIntensiveNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+    percentageIntensiveNeg[i] = intensiveNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
 
 wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]
 
@@ -185,9 +184,7 @@ colorsIntens = ["#B7950B", "#F9E79F"]
 
 p1 = figure(x_range=ageDevision,
             title="Percentage of age group with positive Covid-19 test in hospital ward", toolbar_location=None,
-            tools="")
-
-# dodge('age group', -0.25, range=chart.x_range)
+            tools="", y_axis_label="Age group specific percentage per hospital ward")
 
 p1.vbar_stack(positiveReg, x=dodge('age group', -0.25, range=p1.x_range), width=0.2, source=dictDataReg,
               color=colorsReg, legend_label=positiveReg)
@@ -201,15 +198,12 @@ p1.vbar_stack(positiveIntens, x=dodge('age group', 0.25, range=p1.x_range), widt
 p1.y_range.start = 0
 p1.x_range.range_padding = 0.1
 p1.xgrid.grid_line_color = None
-p1.legend.location = "top_left"
+p1.legend.location = "top_center"
 p1.legend.orientation = "vertical"
-p1.legend.click_policy  = "hide"
 
 # SELECT menu GUI
 selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 resultSelect = Select(title="What to show", options=selectoptions)
-
-
 
 p1.add_tools(HoverTool(
     tooltips=[
@@ -220,9 +214,9 @@ p1.add_tools(HoverTool(
 ))
 
 # Visualisation 2 - Bar chart - Assignment 3
-positiveAge = [0]*20
-totalAge = [0]*20
-percentageAge = [0]*20
+positiveAge = [0] * 20
+totalAge = [0] * 20
+percentageAge = [0] * 20
 
 for index, row in df.iterrows():
     for i in range(20):
@@ -230,8 +224,6 @@ for index, row in df.iterrows():
             totalAge[i] += 1
             if df.iloc[index, 2] == "positive":
                 positiveAge[i] += 1
-
-
 
 for i in range(len(positiveAge)):
     percentageAge[i] = positiveAge[i] / totalAge[i] * 100
@@ -246,26 +238,25 @@ print(f"\nageQuantile({len(ageQuantile)}): {ageQuantile}")
 print("\ndebugging info:-------------------------\n")
 
 sourcep2 = ColumnDataSource(data=dict(
-    x = ageQuantile,
-    y = percentageAge
+    x=ageQuantile,
+    y=percentageAge
 ))
 
-
 p2 = figure(
-    x_range = ageQuantile,
-    y_range = (0, int(max(percentageAge))+1),
-    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below", tools=[WheelZoomTool(), ResetTool(), PanTool()])
+    x_range=ageQuantile,
+    y_range=(0, int(max(percentageAge)) + 1),
+    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below",
+    tools=[WheelZoomTool(), ResetTool(), PanTool()])
 p2.x_range.max_interval = 19
 
 p2.vbar(x='x', top='y', width=0.5, source=sourcep2)
 p2.xgrid.grid_line_color = None
 
-
-#hover tool p2
+# hover tool p2
 p2.add_tools(HoverTool(
     tooltips=[
         ('age quantile', '@x'),
-        ('percentage','@y')
+        ('percentage', '@y')
     ]
 ))
 
@@ -324,7 +315,7 @@ p3.quad(top=top, bottom=bottom, left=left,
         right=right, line_color='white',
         color=color_list)
 
-#Visualisation 4 select the data that is going te be plotted
+# Visualisation 4 select the data that is going te be plotted
 SELECTION = [
     'SARS-Cov-2 exam result',
     'Patient age quantile',
@@ -426,7 +417,7 @@ show_figures = figures
 
 splom = gridplot(show_figures, ncols=3, toolbar_location='right')
 p4 = gridplot([[splom, dum_fig]], toolbar_location=None)
-#end vis4
+# end vis4
 
 # Set ticks with labels
 ticks = [tick + 0.5 for tick in list(range(nlabels))]
@@ -443,7 +434,7 @@ mapper = LinearColorMapper(palette=colors, low=-1, high=1)
 color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
 p3.add_layout(color_bar, 'right')
 
-#hover tool p3
+# hover tool p3
 p3.add_tools(HoverTool(
     tooltips=[
         ('value', '$y'),
@@ -475,13 +466,13 @@ multi_choice.js_on_change("value", CustomJS(code="""
 selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 resultSelect = Select(title="What to show", options=selectoptions)
 
-
 title = Div(
     text="<b>Visualisation tool of patients tested for Covid-19 of the Hospital Israelita Albert Einstein, at São Paulo, Brazil</b>",
-    style={'font-size': '200%', 'color': 'black'},width = 800)
+    style={'font-size': '200%', 'color': 'black'}, width=800)
 
 text = [title]
-
+#gridplot
+p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400)
 # plot sizes
 p1.plot_width = 600
 p1.plot_height = 600
@@ -492,22 +483,21 @@ p3.plot_height = 600
 
 # GUI Left column
 controls = [dropdown, spinner, toggle, multi_choice]
-#inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
+# inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
 l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
 l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
 l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
 
-p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400)
+
 # Tab setup
-tab1 = Panel(child=l1, title="Bar chart1")
-tab2 = Panel(child=l2, title="Bar chart2")
+tab1 = Panel(child=l1, title="Division per hospital ward")
+tab2 = Panel(child=l2, title="Age covid-19 patients")
 tab3 = Panel(child=l3, title="Heat map")
-tab4 = Panel(child=l4, title="Splom")
+tab4 = Panel(child=l4, title="Scatter plot bloodvalues")
 tab5 = Panel(child=p, title="All visualisations")
 
 tabs = Tabs(tabs=[tab5, tab1, tab2, tab3, tab4])
-
 
 layout = layout([[text], [controls, tabs]])
 show(layout)
