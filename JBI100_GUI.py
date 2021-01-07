@@ -100,21 +100,30 @@ positiveIntens = ["intensive care positive", "intensive care negative"]
 
 dictDataReg = {'age group': ageDevision,
                "regular ward positive": percentageRegularWardPos,
-               "regular ward negative": percentageRegularWardNeg}
+               "regular ward negative": percentageRegularWardNeg,
+               "percentagePos"        : percentageRegularWardPos,           # a field with an identical name for every datasource for the tooltip
+               "percentageNeg"        : percentageRegularWardNeg            # a field with an identical name for every datasource for the tooltip
+               }
 
 dictDataSemi = {'age group': ageDevision,
                 "semi-intensive unit positive": percentageSemiIntensivePos,
-                "semi-intensive unit negative": percentageSemiIntensiveNeg}
+                "semi-intensive unit negative": percentageSemiIntensiveNeg,
+                "percentagePos"               : percentageSemiIntensivePos, # a field with an identical name for every datasource for the tooltip
+                "percentageNeg"               : percentageSemiIntensiveNeg  # a field with an identical name for every datasource for the tooltip
+                }
 
 dictDataIntens = {'age group': ageDevision,
                   "intensive care positive": percentageIntensivePos,
-                  "intensive care negative": percentageIntensiveNeg}
+                  "intensive care negative": percentageIntensiveNeg,
+                  "percentagePos"          : percentageIntensivePos,        # a field with an identical name for every datasource for the tooltip
+                  "percentageNeg"          : percentageIntensiveNeg         # a field with an identical name for every datasource for the tooltip
+                  }
 
 sourceReg = ColumnDataSource(data=dictDataReg)
 sourceSemi = ColumnDataSource(data=dictDataSemi)
 sourceIntens = ColumnDataSource(data=dictDataIntens)
 
-colorsReg = ["#2874A6", "#85C1E9"]
+colorsReg = ["#2874A6", "#85C1E9"]      # first dark color, then light color
 colorsSemi = ["#B03A2E", "#F5B7B1"]
 colorsIntens = ["#B7950B", "#F9E79F"]
 
@@ -144,9 +153,10 @@ resultSelect = Select(title="What to show", options=selectoptions)
 p1.add_tools(HoverTool(
     tooltips=[
         ('age group', '@{age group}'),
-        ('percentage', '$y:'),
+        ('percentage positive', '@percentagePos'),
+        ('percentage negative', '@percentageNeg'),
         ('label', '$name'),
-    ], mode='vline'
+    ]
 ))
 
 
@@ -199,7 +209,10 @@ p2.add_tools(HoverTool(
     ]
 ))
 
-# Visualisation 3 - Heat map - Assignment 3
+
+
+
+# Visualisation 3 - Heat map - Assignment 3 =============================================================================================================================
 dfVirus = df.iloc[:, 21:38]
 dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]
 del dfVirus['Mycoplasma pneumoniae']
@@ -255,8 +268,6 @@ p3.quad(top=top, bottom=bottom, left=left,
         color=color_list)
 
 
-
-
 # Visualisation 4 select the data that is going te be plotted ===========================================================================================================
 SELECTION = [
     'SARS-Cov-2 exam result',
@@ -282,7 +293,6 @@ TITLE = "Several blood chemicals versus Age quantile"
 
 # selecting the required data
 df_blood = df[SELECTION].copy()
-print(df_blood)
 
 dfPositive = df_blood[df_blood['SARS-Cov-2 exam result'] == "positive"]
 dfNegative = df_blood[df_blood['SARS-Cov-2 exam result'] == "negative"]
@@ -292,8 +302,6 @@ dfNegAge = dfNegative['Patient age quantile']
 
 del dfPositive['SARS-Cov-2 exam result']
 del dfNegative['SARS-Cov-2 exam result']
-
-print(dfPositive)
 
 dcPositive = dfPositive.to_dict("list")
 dcNegative = dfNegative.to_dict("list")
@@ -316,18 +324,42 @@ colorNegative = "red"
 for index in bloodvaluelist:
     #  for the first one don't use x_range, the remaining all will use the same x_range
     if index != "Hematocrit":
-        scatter = figure(title=index, plot_width=400, plot_height=300, x_range=figures[0].x_range,
-                         y_range=figures[0].y_range,
-                         tools="save, pan, reset, wheel_zoom, box_select", x_axis_label='age quantile',
-                         y_axis_label='standardized test result')
+        scatter = figure(
+            title=index, 
+            plot_width=400, 
+            plot_height=300, 
+            x_range=figures[0].x_range,
+            y_range=figures[0].y_range,
+            tools="save, pan, reset, wheel_zoom, box_select", 
+            x_axis_label='age quantile',
+            y_axis_label='standardized test result'
+        )
+
     else:
-        scatter = figure(title=index, plot_width=400, plot_height=300, y_range=(-4, 4),
-                         tools="save, pan, reset, wheel_zoom, box_select", x_axis_label='age quantile',
-                         y_axis_label='standardized test result')
+        scatter = figure(
+            title=index, 
+            plot_width=400, 
+            plot_height=300, 
+            y_range=(-4, 4),
+            tools="save, pan, reset, wheel_zoom, box_select", 
+            x_axis_label='age quantile',
+            y_axis_label='standardized test result'
+        )
+
     p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
                        source=sourcePos, muted_alpha=0.1)
     n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
                        source=sourceNeg, muted_alpha=0.1)
+    
+    ''' CHANGE: The problem is that there are 2 distinct datasources, to include the tooltip we need to find a way to combine them
+    # hover tool p3
+    scatter.add_tools(HoverTool(
+        tooltips=[
+            ('standardized value:', '$y'),
+            ('pa', '$name')
+        ]
+    ))
+    '''
 
     posneg_list += [p]
     posneg_list += [n]
@@ -374,14 +406,6 @@ p3.yaxis.major_label_overrides = tick_dict
 mapper = LinearColorMapper(palette=colors, low=-1, high=1)
 color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
 p3.add_layout(color_bar, 'right')
-
-# hover tool p3
-p3.add_tools(HoverTool(
-    tooltips=[
-        ('value', '$y'),
-        ('pa', '$name')
-    ]
-))
 
 
 
