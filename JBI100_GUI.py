@@ -377,13 +377,13 @@ for index in bloodvaluelist:
     if index != "Hematocrit":
         scatter = figure(title=index, plot_width=400, plot_height=300, x_range=figures[0].x_range,
                          y_range=figures[0].y_range,
-                         tools="save, pan, reset, wheel_zoom", x_axis_label='age quantile',
+                         tools="save, pan, reset, wheel_zoom, box_select", x_axis_label='age quantile',
                          y_axis_label='standardized test result')
     else:
         scatter = figure(title=index, plot_width=400, plot_height=300, y_range=(-4, 4),
-                         tools="save, pan, reset, wheel_zoom", x_axis_label='age quantile',
+                         tools="save, pan, reset, wheel_zoom, box_select", x_axis_label='age quantile',
                          y_axis_label='standardized test result')
-    p = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
+    p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
                        source=sourcePos, muted_alpha=0.1)
     n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
                        source=sourceNeg, muted_alpha=0.1)
