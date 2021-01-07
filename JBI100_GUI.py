@@ -28,7 +28,11 @@ output_file("test.html")
 df = pd.read_excel(
     r'dataset.xlsx')
 
-# tab 1 - Assignment 4 visualisation - Stacked bar chart
+
+
+
+
+# tab 1 - Assignment 4 visualisation - Stacked bar chart ================================================================================================================
 # @CHANGE: The number of bins was HARDCODED!!! We can reduce the number of lines by 83... 
 # ... we can do so by computing in which bin the age quantile will go using integer division (see def. binofIndex)
 
@@ -145,7 +149,10 @@ p1.add_tools(HoverTool(
     ], mode='vline'
 ))
 
-# Visualisation 2 - Bar chart - Assignment 3
+
+
+
+# Visualisation 2 - Bar chart - Assignment 3 ============================================================================================================================
 positiveAge = [0] * 20
 totalAge = [0] * 20
 percentageAge = [0] * 20
@@ -247,7 +254,10 @@ p3.quad(top=top, bottom=bottom, left=left,
         right=right, line_color='white',
         color=color_list)
 
-# Visualisation 4 select the data that is going te be plotted
+
+
+
+# Visualisation 4 select the data that is going te be plotted ===========================================================================================================
 SELECTION = [
     'SARS-Cov-2 exam result',
     'Patient age quantile',
@@ -270,7 +280,6 @@ SELECTION = [
 # title of the plot
 TITLE = "Several blood chemicals versus Age quantile"
 
-''' Data cleaning =============================================================='''
 # selecting the required data
 df_blood = df[SELECTION].copy()
 print(df_blood)
@@ -374,7 +383,10 @@ p3.add_tools(HoverTool(
     ]
 ))
 
-# Spinner GUI
+
+
+
+# Spinner GUI ===========================================================================================================================================================
 spinner = Spinner(title="Size", low=0, high=4, step=0.1, value=1, width=300)
 # spinner.js_link('value', points.glyph, 'radius')
 
