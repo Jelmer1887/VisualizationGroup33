@@ -29,121 +29,53 @@ df = pd.read_excel(
     r'dataset.xlsx')
 
 # tab 1 - Assignment 4 visualisation - Stacked bar chart
-regularWardPos = [0, 0, 0, 0, 0]
-semiIntensivePos = [0, 0, 0, 0, 0]
-intensivePos = [0, 0, 0, 0, 0]
+# @CHANGE: The number of bins was HARDCODED!!! We can reduce the number of lines by 83... 
+# ... we can do so by computing in which bin the age quantile will go using integer division (see def. binofIndex)
 
-totalAgePos = [0, 0, 0, 0, 0]
+nrofBins = 5                                # nr of bins to put age quantiles in to
+binSize = 20/nrofBins                       # nr of age quantiles per bin
 
-regularWardNeg = [0, 0, 0, 0, 0]
-semiIntensiveNeg = [0, 0, 0, 0, 0]
-intensiveNeg = [0, 0, 0, 0, 0]
+regularWardPos = [0] * nrofBins             # shortcut: list of zeroes to store nr of people per ward per bin
+semiIntensivePos = [0] * nrofBins
+intensivePos = [0] * nrofBins
 
-totalAgeNeg = [0, 0, 0, 0, 0]
+regularWardNeg = [0] * nrofBins
+semiIntensiveNeg = [0] * nrofBins
+intensiveNeg = [0] * nrofBins
+
+totalAgePos = [0] * nrofBins
+totalAgeNeg = [0] * nrofBins
+
 
 for index, row in df.iterrows():
-    if df.iloc[index, 1] == 0 or df.iloc[index, 1] == 1 or df.iloc[index, 1] == 2 or df.iloc[index, 1] == 3:
-        if df.iloc[index, 2] == "positive":
-            totalAgePos[0] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardPos[0] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensivePos[0] += 1
-            elif df.iloc[index, 5] == 1:
-                intensivePos[0] += 1
 
-        if df.iloc[index, 2] == "negative":
-            totalAgeNeg[0] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardNeg[0] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensiveNeg[0] += 1
-            elif df.iloc[index, 5] == 1:
-                intensiveNeg[0] += 1
+    binofIndex = int(df.iloc[index, 1] / binSize)       # computes in which bin the current age quantile would be
 
-    elif df.iloc[index, 1] == 4 or df.iloc[index, 1] == 5 or df.iloc[index, 1] == 6 or df.iloc[index, 1] == 7:
-        if df.iloc[index, 2] == "positive":
-            totalAgePos[1] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardPos[1] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensivePos[1] += 1
-            elif df.iloc[index, 5] == 1:
-                intensivePos[1] += 1
+    if df.iloc[index, 2] == "positive":
+        totalAgePos[binofIndex] += 1                    # @CHANGE: instead of having seperate if statements for each bin, use computed bin as index
+        if df.iloc[index, 3] == 1:
+            regularWardPos[binofIndex] += 1
+        elif df.iloc[index, 4] == 1:
+            semiIntensivePos[binofIndex] += 1
+        elif df.iloc[index, 5] == 1:
+            intensivePos[binofIndex] += 1
 
-        if df.iloc[index, 2] == "negative":
-            totalAgeNeg[1] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardNeg[1] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensiveNeg[1] += 1
-            elif df.iloc[index, 5] == 1:
-                intensiveNeg[1] += 1
+    if df.iloc[index, 2] == "negative":                 
+        totalAgeNeg[binofIndex] += 1
+        if df.iloc[index, 3] == 1:                      # @CHANGE: technically, we are still repeating ourselves in the nested if/elif-statements here...
+            regularWardNeg[binofIndex] += 1             # ...so it can be done in a cleaner way... if we have time at the end we should invesitage using mappings to optimise this
+        elif df.iloc[index, 4] == 1:
+            semiIntensiveNeg[binofIndex] += 1
+        elif df.iloc[index, 5] == 1:
+            intensiveNeg[binofIndex] += 1
 
-    elif df.iloc[index, 1] == 8 or df.iloc[index, 1] == 9 or df.iloc[index, 1] == 10 or df.iloc[index, 1] == 11:
-        if df.iloc[index, 2] == "positive":
-            totalAgePos[2] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardPos[2] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensivePos[2] += 1
-            elif df.iloc[index, 5] == 1:
-                intensivePos[2] += 1
+percentageRegularWardPos = [0] * nrofBins
+percentageSemiIntensivePos = [0] * nrofBins
+percentageIntensivePos = [0] * nrofBins
 
-        if df.iloc[index, 2] == "negative":
-            totalAgeNeg[2] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardNeg[2] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensiveNeg[2] += 1
-            elif df.iloc[index, 5] == 1:
-                intensiveNeg[2] += 1
-
-    elif df.iloc[index, 1] == 12 or df.iloc[index, 1] == 13 or df.iloc[index, 1] == 14 or df.iloc[index, 1] == 15:
-        if df.iloc[index, 2] == "positive":
-            totalAgePos[3] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardPos[3] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensivePos[3] += 1
-            elif df.iloc[index, 5] == 1:
-                intensivePos[3] += 1
-
-        if df.iloc[index, 2] == "negative":
-            totalAgeNeg[3] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardNeg[3] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensiveNeg[3] += 1
-            elif df.iloc[index, 5] == 1:
-                intensiveNeg[3] += 1
-
-    elif df.iloc[index, 1] == 16 or df.iloc[index, 1] == 17 or df.iloc[index, 1] == 18 or df.iloc[index, 1] == 19:
-        if df.iloc[index, 2] == "positive":
-            totalAgePos[4] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardPos[4] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensivePos[4] += 1
-            elif df.iloc[index, 5] == 1:
-                intensivePos[4] += 1
-
-        if df.iloc[index, 2] == "negative":
-            totalAgeNeg[4] += 1
-            if df.iloc[index, 3] == 1:
-                regularWardNeg[4] += 1
-            elif df.iloc[index, 4] == 1:
-                semiIntensiveNeg[4] += 1
-            elif df.iloc[index, 5] == 1:
-                intensiveNeg[4] += 1
-
-percentageRegularWardPos = [0, 0, 0, 0, 0]
-percentageSemiIntensivePos = [0, 0, 0, 0, 0]
-percentageIntensivePos = [0, 0, 0, 0, 0]
-
-percentageRegularWardNeg = [0, 0, 0, 0, 0]
-percentageSemiIntensiveNeg = [0, 0, 0, 0, 0]
-percentageIntensiveNeg = [0, 0, 0, 0, 0]
+percentageRegularWardNeg = [0] * nrofBins
+percentageSemiIntensiveNeg = [0] * nrofBins
+percentageIntensiveNeg = [0] * nrofBins
 
 for i in range(len(regularWardPos)):
     percentageRegularWardPos[i] = regularWardPos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
