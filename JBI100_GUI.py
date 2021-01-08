@@ -1,5 +1,6 @@
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool, CustomJSHover, BoxZoomTool, ResetTool, \
     WheelZoomTool, PanTool, Range1d, DataRange1d
+from bokeh.models.widgets.buttons import Button
 from bokeh.transform import jitter
 from bokeh.plotting import figure, output_file, show
 from bokeh.models.widgets import Panel, Tabs
@@ -27,10 +28,6 @@ plot.add_tools(BoxSelectTool(dimensions="width"))
 output_file("test.html")
 df = pd.read_excel(
     r'dataset.xlsx')
-
-
-
-
 
 # tab 1 - Assignment 4 visualisation - Stacked bar chart ================================================================================================================
 # @CHANGE: The number of bins was HARDCODED!!! We can reduce the number of lines by 83... 
@@ -215,8 +212,6 @@ p2.add_tools(HoverTool(
         ('percentage', '@y')
     ]
 ))
-
-
 
 
 # Visualisation 3 - Heat map - Assignment 3 =============================================================================================================================
@@ -433,10 +428,17 @@ toggle.js_on_click(CustomJS(code="""
     console.log('toggle: active=' + this.active, this.toString())
 """))
 
+# attempt at linking it all
+lab = "Click me!"
+but = Button(label = lab)
+def clickedcode():      # this function would be called when the button is pressed, but it's not triggering...
+    if lab == "Click me!":      # I tried changing the label but that did not happen
+        lab = "Clicked"
+    else:
+        lab = "Click me!"
+    print("button was clicked!")       # nothing was printed to the console either
 
-
-
-
+but.on_click(clickedcode)       # links the clickedcode to the button
 
 # select
 OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
@@ -465,7 +467,7 @@ p3.plot_width = 600
 p3.plot_height = 600
 
 # GUI Left column
-controls = [dropdown, spinner, toggle, multi_choice]
+controls = [dropdown, spinner, toggle, multi_choice, but]
 # inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
 l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
