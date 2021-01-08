@@ -125,8 +125,8 @@ colorsSemi = ["#B03A2E", "#F5B7B1"]
 colorsIntens = ["#B7950B", "#F9E79F"]
 
 p1 = figure(x_range=ageDevision,
-            title="Percentage of age group with positive Covid-19 test in hospital ward", toolbar_location=None,
-            tools="", y_axis_label="Age group specific percentage per hospital ward")
+            title="Percentage of age group with positive Covid-19 test in hospital ward", toolbar_location="right",
+            tools=([WheelZoomTool(), ResetTool(), PanTool(), "save"]), y_axis_label="Age group specific percentage per hospital ward")
 
 p1.vbar_stack(positiveReg, x=dodge('age group', -0.25, range=p1.x_range), width=0.2, source=dictDataReg,
               color=colorsReg, legend_label=positiveReg)
@@ -193,13 +193,14 @@ p2 = figure(
     x_range=sorted_ageQuantile,
     y_range=(0, int(max(percentageAge)) + 1),
     plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below",
-    tools=[WheelZoomTool(), ResetTool(), PanTool()])
+    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"])
 #  sorted on age quantile
 p2 = figure(
     x_range=ageQuantile,
     y_range=(0, int(max(percentageAge)) + 1),
-    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below",
-    tools=[WheelZoomTool(), ResetTool(), PanTool()])
+    plot_height=250, title="Percentage positive tests per age quantile", toolbar_location="right",
+    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"],
+    y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
 p2.x_range.max_interval = 19
 
 p2.vbar(x='x', top='y', width=0.5, source=sourcep2)
@@ -457,7 +458,7 @@ title = Div(
 
 text = [title]
 # gridplot
-p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400)
+p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400, merge_tools = False)
 # plot sizes
 p1.plot_width = 600
 p1.plot_height = 600
@@ -485,3 +486,4 @@ tabs = Tabs(tabs=[tab5, tab1, tab2, tab3, tab4])
 
 layout = layout([[text], [controls, tabs]])
 show(layout)
+print(totalAge)
