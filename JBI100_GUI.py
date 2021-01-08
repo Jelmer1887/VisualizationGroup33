@@ -192,8 +192,9 @@ sorted_ageQuantile = sorted(ageQuantile, key=lambda x: percentageAge[ageQuantile
 p2 = figure(
     x_range=sorted_ageQuantile,
     y_range=(0, int(max(percentageAge)) + 1),
-    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below",
-    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"])
+    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="right",
+    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"],
+    y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
 #  sorted on age quantile
 p2 = figure(
     x_range=ageQuantile,
