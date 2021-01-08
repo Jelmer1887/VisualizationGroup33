@@ -188,9 +188,16 @@ print("\ndebugging info:-------------------------\n")
 
 sourcep2 = ColumnDataSource(data=dict(
     x=ageQuantile,
-    y=percentageAge
+    y=percentageAge,
 ))
-
+# sorted on y value, from low to high
+sorted_ageQuantile = sorted(ageQuantile, key=lambda x: percentageAge[ageQuantile.index(x)])
+p2 = figure(
+    x_range=sorted_ageQuantile,
+    y_range=(0, int(max(percentageAge)) + 1),
+    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="below",
+    tools=[WheelZoomTool(), ResetTool(), PanTool()])
+#  sorted on age quantile
 p2 = figure(
     x_range=ageQuantile,
     y_range=(0, int(max(percentageAge)) + 1),
@@ -419,27 +426,35 @@ menu = [("Item 1", "item_1"), ("Item 2", "item_2"), None, ("Item 3", "item_3")]
 dropdown = Dropdown(label="Dropdown button", button_type="warning", menu=menu)
 dropdown.js_on_event("menu_item_click", CustomJS(code="console.log('dropdown: ' + this.item, this.toString())"))
 
+
 # Toggle button GUI
 toggle = Toggle(label="Button", button_type="success")
 toggle.js_on_click(CustomJS(code="""
     console.log('toggle: active=' + this.active, this.toString())
 """))
+
+
+
+
+
+
+# select
 OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 multi_choice = MultiChoice(value=["foo", "baz"], options=OPTIONS)
 multi_choice.js_on_change("value", CustomJS(code="""
     console.log('multi_choice: value=' + this.value, this.toString())
 """))
 
-# SELECT menu GUI
-selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
-resultSelect = Select(title="What to show", options=selectoptions)
+# # SELECT menu GUI
+# selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
+# resultSelect = Select(title="What to show", options=selectoptions)
 
 title = Div(
     text="<b>Visualisation tool of patients tested for Covid-19 of the Hospital Israelita Albert Einstein, at São Paulo, Brazil</b>",
     style={'font-size': '200%', 'color': 'black'}, width=800)
 
 text = [title]
-#gridplot
+# gridplot
 p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400)
 # plot sizes
 p1.plot_width = 600
@@ -456,7 +471,6 @@ l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
 l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
 l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
-
 
 # Tab setup
 tab1 = Panel(child=l1, title="Division per hospital ward")
