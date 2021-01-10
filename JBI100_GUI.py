@@ -22,6 +22,7 @@ from bokeh.layouts import widgetbox
 from bokeh.models.widgets import Div
 from bokeh.models.widgets import Paragraph
 from bokeh.models.widgets import PreText
+from bokeh.models import ColorPicker
 
 plot = figure(tools="pan,wheel_zoom,box_zoom,reset")
 plot.add_tools(BoxSelectTool(dimensions="width"))
@@ -204,8 +205,13 @@ p2 = figure(
     y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
 p2.x_range.max_interval = 19
 
-p2.vbar(x='x', top='y', width=0.5, source=sourcep2)
+vbar = p2.vbar(x='x', top='y', width=0.5, source=sourcep2, color = 'blue')
 p2.xgrid.grid_line_color = None
+
+picker = ColorPicker(title="Line Color")
+picker.js_link('color', vbar.glyph, 'fill_color')
+picker.js_link('color', vbar.glyph, 'line_color')
+
 
 # hover tool p2
 p2.add_tools(HoverTool(
@@ -474,7 +480,7 @@ controls = [dropdown, spinner, toggle, multi_choice, but]
 l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
 l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
-l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
+l4 = layout([[p4,picker]], sizing_mode='fixed', height=600, width=150)
 
 # Tab setup
 tab1 = Panel(child=l1, title="Division per hospital ward")
