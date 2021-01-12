@@ -478,9 +478,9 @@ p3.plot_height = 600
 controls = [dropdown, spinner, toggle, multi_choice, but]
 # inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
 l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
-l2 = layout([[p2]], sizing_mode='fixed', height=600, width=150)
+l2 = layout([[p2, picker]], sizing_mode='fixed', height=600, width=150)
 l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
-l4 = layout([[p4,picker]], sizing_mode='fixed', height=600, width=150)
+l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
 
 # Tab setup
 tab1 = Panel(child=l1, title="Division per hospital ward")
