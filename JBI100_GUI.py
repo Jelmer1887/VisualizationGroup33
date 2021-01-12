@@ -126,7 +126,7 @@ colorsSemi = ["#B03A2E", "#F5B7B1"]
 colorsIntens = ["#B7950B", "#F9E79F"]
 
 p1 = figure(x_range=ageDevision,
-            title="Percentage of age group with positive Covid-19 test in hospital ward", toolbar_location="right",
+            title="Percentage of age group in hospital ward seperated by COVID-19 test result", toolbar_location="right",
             tools=([WheelZoomTool(), ResetTool(), PanTool(), "save"]), y_axis_label="Age group specific percentage per hospital ward")
 
 p1.vbar_stack(positiveReg, x=dodge('age group', -0.25, range=p1.x_range), width=0.2, source=dictDataReg,
