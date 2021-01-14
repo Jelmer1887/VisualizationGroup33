@@ -26,7 +26,7 @@ from bokeh.models import ColorPicker
 
 plot = figure(tools="pan,wheel_zoom,box_zoom,reset")        # I need to know if this is still needed?
 plot.add_tools(BoxSelectTool(dimensions="width"))
-output_file("test.html")
+output_file("test.html")                                    # sets outputfile for the resulting webpage tool
 
 
 # // DATA PROCESSING ====================================================================================================================================================
@@ -58,8 +58,9 @@ for index, row in df.iterrows():
 
     binofIndex = int(df.iloc[index, 1] / binSize)       # computes in which bin the current age quantile would be
 
+    # count the number of positive and negative patients per bin and per ward
     if df.iloc[index, 2] == "positive":
-        totalAgePos[binofIndex] += 1                    # @CHANGE: instead of having seperate if statements for each bin, use computed bin as index
+        totalAgePos[binofIndex] += 1                    
         if df.iloc[index, 3] == 1:
             regularWardPos[binofIndex] += 1
         elif df.iloc[index, 4] == 1:
@@ -69,14 +70,14 @@ for index, row in df.iterrows():
 
     if df.iloc[index, 2] == "negative":                 
         totalAgeNeg[binofIndex] += 1
-        if df.iloc[index, 3] == 1:                      # @CHANGE: technically, we are still repeating ourselves in the nested if/elif-statements here...
+        if df.iloc[index, 3] == 1:                      # technically, we are still repeating ourselves in the nested if/elif-statements here...
             regularWardNeg[binofIndex] += 1             # ...so it can be done in a cleaner way... if we have time at the end we should invesitage using mappings to optimise this
         elif df.iloc[index, 4] == 1:
             semiIntensiveNeg[binofIndex] += 1
         elif df.iloc[index, 5] == 1:
             intensiveNeg[binofIndex] += 1
 
-percentageRegularWardPos = [0] * nrofBins
+percentageRegularWardPos = [0] * nrofBins               # lists containing percentages computed from the data
 percentageSemiIntensivePos = [0] * nrofBins
 percentageIntensivePos = [0] * nrofBins
 
@@ -85,7 +86,7 @@ percentageSemiIntensiveNeg = [0] * nrofBins
 percentageIntensiveNeg = [0] * nrofBins
 
 for i in range(len(regularWardPos)):
-    percentageRegularWardPos[i] = regularWardPos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+    percentageRegularWardPos[i] = regularWardPos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100       # compute percentages
     percentageSemiIntensivePos[i] = semiIntensivePos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
     percentageIntensivePos[i] = intensivePos[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
 
@@ -96,33 +97,29 @@ for i in range(len(regularWardPos)):
 # [END] Stacked Barchart Percentage computation -----------------------------------------------------------------------
 
 # Barchart percentage per age quantile computation --------------------------------------------------------------------
-positiveAge = [0] * 20
-totalAge = [0] * 20
-percentageAge = [0] * 20
+positiveAge = [0] * 20                              # list counting positively tested persons per age quantile
+totalAge = [0] * 20                                 # list counting the total amount of people in an age quantile
+percentageAge = [0] * 20                            # list containing percentage of positively tested per age quantile
 
-for index, row in df.iterrows():
-    for i in range(20):
-        if df.iloc[index, 1] == i:
-            totalAge[i] += 1
-            if df.iloc[index, 2] == "positive":
-                positiveAge[i] += 1
+for index, row in df.iterrows():                    # go over all entries in the dataframe
+    rowAge = df.iloc[index, 1]
+    totalAge[rowAge] += 1                           # increment counter for corresponding age quantile
+    if df.iloc[index, 2] == "positive":
+        positiveAge[rowAge] += 1                    # increment counter for corresponding postively tested counter
 
-for i in range(len(positiveAge)):
-    percentageAge[i] = positiveAge[i] / totalAge[i] * 100
+# compute percentage of positively tested per age quantile using a list comprehension (quicker than loop)
+percentageAge = [(positiveAge[i]/totalAge[i]) * 100 for i in range(len(positiveAge))]
 
-ageQuantile = [str(i) for i in range(20)]
-
-print("\ndebugging info:-------------------------")
+print("\ndebugging info:-------------------------") # some debugging info
 print(f"length positiveAge: {len(positiveAge)}")
 print(f"length totalAge: {len(totalAge)}")
 print(f"length percentageAge: {len(percentageAge)}")
-print(f"\nageQuantile({len(ageQuantile)}): {ageQuantile}")
-print("\ndebugging info:-------------------------\n")
+print("\n----------------------------------------\n")
 
 # [END] Barchart percentage per age quantile computation --------------------------------------------------------------
 
 # Heatmap data selection and colors/bounds computations ---------------------------------------------------------------
-def get_bounds(n):
+def get_bounds(n):                                  # @help@!! I don't understand this code!
     """Gets bounds for quads with n features"""
     bottom = list(chain.from_iterable([[ii] * nlabels for ii in range(nlabels)]))
     top = list(chain.from_iterable([[ii + 1] * nlabels for ii in range(nlabels)]))
@@ -131,7 +128,7 @@ def get_bounds(n):
     return top, bottom, left, right
 
 
-def get_colors(corr_array, colors):
+def get_colors(corr_array, colors):                 # @help@!! I don't understand this code!
     """Aligns color values from palette with the correlation coefficient values"""
     ccorr = arange(-1, 1, 1 / (len(colors) / 2))
     color = []
@@ -140,27 +137,27 @@ def get_colors(corr_array, colors):
         color.append(colors[ind - 1])
     return color
 
-dfVirus = df.iloc[:, 21:38]
-dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]
-del dfVirus['Mycoplasma pneumoniae']
+dfVirus = df.iloc[:, 21:38]                         # copy only relevant data columns using a list-slice
+dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]    # add covid result to the copy
+del dfVirus['Mycoplasma pneumoniae']                # remove this column because it has too few entries
 
 for i in range(16):
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)    # chagne strings to 0
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)        # chagne strings to 1
 
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)          # chagne strings to 0
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)          # chagne strings to 1
 
-correlation = dfVirus.corr()
+correlation = dfVirus.corr()                        # create correlation object
 
-colors = list(reversed(colors[11]))  # we want an odd number to ensure 0 correlation is a distinct color
-labels = dfVirus.columns
-nlabels = len(labels)
+colors = list(reversed(colors[11]))     # we want an odd number to ensure 0 correlation is a distinct color
+labels = dfVirus.columns                # set labels for the plot to dataframe columns
+nlabels = len(labels)                   # nr of labels
 
 # [END] Heatmap data selection and colors/bounds computations ---------------------------------------------------------
 
 # Grid of bloodplots data selection/cleaning and restructuring --------------------------------------------------------
-SELECTION = [
+SELECTION = [                           # list of column to be used in visualisation (blood value columns)
     'SARS-Cov-2 exam result',
     'Patient age quantile',
     'Hematocrit',
@@ -176,40 +173,42 @@ SELECTION = [
     'Mean corpuscular volume (MCV)',
     'Monocytes',
     'Red blood cell distribution width (RDW)',
-    # 'Serum Glucose', <-- averaged around 4 values per quantile, too few
+    # 'Serum Glucose', <-- averaged around 4 values per quantile, too few entries! So not included
 ]
 
 # selecting the required data
-df_blood = df[SELECTION].copy()
+df_blood = df[SELECTION].copy()         # copy selection from main dataframe
 
-dfPositive = df_blood[df_blood['SARS-Cov-2 exam result'] == "positive"]
-dfNegative = df_blood[df_blood['SARS-Cov-2 exam result'] == "negative"]
+dfPositive = df_blood[df_blood['SARS-Cov-2 exam result'] == "positive"]     # filter positive values
+dfNegative = df_blood[df_blood['SARS-Cov-2 exam result'] == "negative"]     # filter negative values
 
-dfPosAge = dfPositive['Patient age quantile']
+dfPosAge = dfPositive['Patient age quantile']   # lists of ages
 dfNegAge = dfNegative['Patient age quantile']
 
-del dfPositive['SARS-Cov-2 exam result']
-del dfNegative['SARS-Cov-2 exam result']
+del dfPositive['SARS-Cov-2 exam result']        # remove covid test result from copy
+del dfNegative['SARS-Cov-2 exam result']        # remove covid test result from copy
 
-dcPositive = dfPositive.to_dict("list")
+dcPositive = dfPositive.to_dict("list")         # convert dataframes to dictionaries
 dcNegative = dfNegative.to_dict("list")
 
-bloodvaluelist = list(dcPositive)
+bloodvaluelist = list(dcPositive)               # convert df of blood values for axis to list
 
-bloodvaluelist.remove('Patient age quantile')
+bloodvaluelist.remove('Patient age quantile')   # remove x-axis column from dictionary for axis 
 
 # // VISUALISATIONS CODE ================================================================================================================================================
 
 # tab 1 - Stacked bar chart -------------------------------------------------------------------------------------------
 
-wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]
+wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]    # legend names for the wards
 
-ageDevision = ["child and teen", "young adult and adult", "middle aged", "senior", "elderly"]
+ageDevision = ["child and teen", "young adult and adult", "middle aged", "senior", "elderly"]   # labels of the bins
+if len(ageDevision) != nrofBins: raise ValueError (f"nr of labels for bins doesn't match nr of bins! ({len(ageDevision)} != {nrofBins})")
 
-positiveReg = ["regular ward positive", "regular ward negative"]
+positiveReg = ["regular ward positive", "regular ward negative"]            # labels of the positive and negative parts
 positiveSemi = ["semi-intensive unit positive", "semi-intensive unit negative"]
 positiveIntens = ["intensive care positive", "intensive care negative"]
 
+# dictionaries for plotting the data
 dictDataReg = {'age group': ageDevision,
                "regular ward positive": percentageRegularWardPos,
                "regular ward negative": percentageRegularWardNeg,
@@ -231,14 +230,17 @@ dictDataIntens = {'age group': ageDevision,
                   "percentageNeg"          : percentageIntensiveNeg         # a field with an identical name for every datasource for the tooltip
                   }
 
-sourceReg = ColumnDataSource(data=dictDataReg)
+sourceReg = ColumnDataSource(data=dictDataReg)          # convert dictionaries to datasources
 sourceSemi = ColumnDataSource(data=dictDataSemi)
 sourceIntens = ColumnDataSource(data=dictDataIntens)
 
+# colors of the bars
 colorsReg = ["#2874A6", "#85C1E9"]      # first dark color, then light color
 colorsSemi = ["#B03A2E", "#F5B7B1"]
 colorsIntens = ["#B7950B", "#F9E79F"]
 
+
+# creating the bars
 p1 = figure(x_range=ageDevision,
             title="Percentage of age group in hospital ward seperated by COVID-19 test result", toolbar_location="right",
             tools=([WheelZoomTool(), ResetTool(), PanTool(), "save"]), y_axis_label="Age group specific percentage per hospital ward")
@@ -252,16 +254,18 @@ p1.vbar_stack(positiveSemi, x=dodge('age group', 0.0, range=p1.x_range), width=0
 p1.vbar_stack(positiveIntens, x=dodge('age group', 0.25, range=p1.x_range), width=0.2, source=dictDataIntens,
               color=colorsIntens, legend_label=positiveIntens)
 
+# plot properties
 p1.y_range.start = 0
 p1.x_range.range_padding = 0.1
 p1.xgrid.grid_line_color = None
-p1.legend.location = "top_center"
-p1.legend.orientation = "vertical"
+p1.legend.location = "top_center"   # legend location
+p1.legend.orientation = "vertical"  # legend orientation (items below each other)
 
-# SELECT menu GUI
+# SELECT menu GUI       # @help@ What does this do??
 selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 resultSelect = Select(title="What to show", options=selectoptions)
 
+# Hover tooltips
 p1.add_tools(HoverTool(
     tooltips=[
         ('age group', '@{age group}'),
@@ -274,10 +278,15 @@ p1.add_tools(HoverTool(
 # [END] tab 1 - Stacked bar chart -------------------------------------------------------------------------------------
 
 # tab 2 - Bar chart ---------------------------------------------------------------------------------------------------
-sourcep2 = ColumnDataSource(data=dict(
+ageQuantile = [str(i) for i in range(20)]           # list of labels
+sourcep2 = ColumnDataSource(data=dict(  # create and convert dictionary to datasource
     x=ageQuantile,
     y=percentageAge,
+    total = totalAge,
+    positive = positiveAge
 ))
+
+# // 2 different versions of the plot, to re-arrange the data
 # sorted on y value, from low to high
 sorted_ageQuantile = sorted(ageQuantile, key=lambda x: percentageAge[ageQuantile.index(x)])
 p2 = figure(
@@ -286,6 +295,7 @@ p2 = figure(
     plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="right",
     tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"],
     y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
+
 #  sorted on age quantile
 p2 = figure(
     x_range=ageQuantile,
@@ -295,11 +305,11 @@ p2 = figure(
     y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
 p2.x_range.max_interval = 19
 
-vbar = p2.vbar(x='x', top='y', width=0.5, source=sourcep2, color = 'blue')
-p2.xgrid.grid_line_color = None
+vbar = p2.vbar(x='x', top='y', width=0.5, source=sourcep2, color = 'blue')  # creates bars
+p2.xgrid.grid_line_color = None     # removes gridlines
 
-picker = ColorPicker(title="Line Color")
-picker.js_link('color', vbar.glyph, 'fill_color')
+picker = ColorPicker(title="Line Color")            # allows to change the color of the bars
+picker.js_link('color', vbar.glyph, 'fill_color')   # link the color properties to the selector
 picker.js_link('color', vbar.glyph, 'line_color')
 
 
@@ -307,7 +317,9 @@ picker.js_link('color', vbar.glyph, 'line_color')
 p2.add_tools(HoverTool(
     tooltips=[
         ('age quantile', '@x'),
-        ('percentage', '@y')
+        ('percentage', '@y'),
+        ('number of patients', '@total'),
+        ('number of positive patients', '@positive')
     ]
 ))
 
@@ -315,20 +327,20 @@ p2.add_tools(HoverTool(
 
 # tab 3 - Heat map ----------------------------------------------------------------------------------------------------
 
-p3 = figure(plot_width=600, plot_height=600,
+p3 = figure(plot_width=600, plot_height=600,                # figure object for the heatmap
             x_range=(0, nlabels), y_range=(0, nlabels),
             title="Correlation Coefficient Heatmap",
             tools="save", toolbar_location="right")
 
-p3.xgrid.grid_line_color = None
+p3.xgrid.grid_line_color = None                             # remove gridlines
 p3.ygrid.grid_line_color = None
-p3.xaxis.major_label_orientation = pi / 4
+p3.xaxis.major_label_orientation = pi / 4                   # rotate labels by 45deg (pi/4 rad => 45deg)
 p3.yaxis.major_label_orientation = pi / 4
 
-top, bottom, left, right = get_bounds(nlabels)  # creates sqaures for plot
+top, bottom, left, right = get_bounds(nlabels)              # creates sqaures for plot
 color_list = get_colors(correlation.values.flatten(), colors)
 
-p3.quad(top=top, bottom=bottom, left=left,
+p3.quad(top=top, bottom=bottom, left=left,                  # add squares to plot
         right=right, line_color='white',
         color=color_list)
 
@@ -336,21 +348,21 @@ p3.quad(top=top, bottom=bottom, left=left,
 
 # tab 4 - splom plot --------------------------------------------------------------------------------------------------
 
-figures = []
+figures = []                                                # list to contain all subplots
 
 # title of the plot
 TITLE = "Several blood chemicals versus Age quantile"
 
-sourcePos = ColumnDataSource(dfPositive)
+sourcePos = ColumnDataSource(dfPositive)                    # convert dataframes to datasources
 sourceNeg = ColumnDataSource(dfNegative)
 
-posneg_list = []
-colorPositive = "blue"
-colorNegative = "red"
+posneg_list = []                                            # list to contain all dots in a plot
+colorPositive = "blue"                                      # color of positively tested
+colorNegative = "red"                                       # color of negatively tested
 
-for index in bloodvaluelist:
+for index in bloodvaluelist:                                # create subplots for every bloodtype
     #  for the first one don't use x_range, the remaining all will use the same x_range
-    if index != "Hematocrit":
+    if index != "Hematocrit":                               # a seperate plot is made for the first entry
         scatter = figure(
             title=index, 
             plot_width=400, 
@@ -363,8 +375,8 @@ for index in bloodvaluelist:
         )
 
     else:
-        scatter = figure(
-            title=index, 
+        scatter = figure(                                   # plots for all the other blood values
+            title=index,                                    # ... these are the same but they copy their axis from the first one
             plot_width=400, 
             plot_height=300, 
             y_range=(-4, 4),
@@ -373,15 +385,16 @@ for index in bloodvaluelist:
             y_axis_label='standardized test result'
         )
 
+    # create dot objects for the points in the plots
     p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
                        source=sourcePos, muted_alpha=0.1)
     n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
                        source=sourceNeg, muted_alpha=0.1)
 
-    posneg_list += [p]
+    posneg_list += [p]                                      # add dots to list
     posneg_list += [n]
 
-    figures.append(scatter)
+    figures.append(scatter)                                 # add figure to the list of subfigures
 
 # Lines with the same color will share a same legend item
 legend_items = [LegendItem(label="Covid-19 positive",
@@ -391,14 +404,18 @@ legend_items = [LegendItem(label="Covid-19 positive",
 
 # use a dummy figure for the legend
 dum_fig = figure(plot_width=300, plot_height=600, outline_line_alpha=0, toolbar_location=None)
+
 # set the components of the figure invisible
 for fig_component in [dum_fig.grid[0], dum_fig.ygrid[0], dum_fig.xaxis[0], dum_fig.yaxis[0]]:
     fig_component.visible = False
+
 # The points referred by the legend need to be present in the figure ,so add them to figure renderers
 dum_fig.renderers += posneg_list
+
 # set the figure range outside of the range of all glyphs
 dum_fig.x_range.end = 1005
 dum_fig.x_range.start = 1000
+
 # add the legend
 dum_fig.add_layout(Legend(click_policy='mute', location='top_left', border_line_alpha=0, items=legend_items))
 
