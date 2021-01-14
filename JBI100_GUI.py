@@ -24,16 +24,21 @@ from bokeh.models.widgets import Paragraph
 from bokeh.models.widgets import PreText
 from bokeh.models import ColorPicker
 
-plot = figure(tools="pan,wheel_zoom,box_zoom,reset")
+plot = figure(tools="pan,wheel_zoom,box_zoom,reset")        # I need to know if this is still needed?
 plot.add_tools(BoxSelectTool(dimensions="width"))
 output_file("test.html")
-df = pd.read_excel(
-    r'dataset.xlsx')
 
-# tab 1 - Assignment 4 visualisation - Stacked bar chart ================================================================================================================
-# @CHANGE: The number of bins was HARDCODED!!! We can reduce the number of lines by 83... 
-# ... we can do so by computing in which bin the age quantile will go using integer division (see def. binofIndex)
 
+# // DATA PROCESSING ====================================================================================================================================================
+# The following section contains ALL data (pre)processing done on the dataset. This includes:
+# - Extracting data from the dataset
+# - Removing empty entries
+# - grouping data
+# - computing new data from available columns
+
+df = pd.read_excel(r'dataset.xlsx')         # import all data from the dataset as pandas dataframe
+
+# Stacked Barchart Percentage computation -----------------------------------------------------------------------------
 nrofBins = 5                                # nr of bins to put age quantiles in to
 binSize = 20/nrofBins                       # nr of age quantiles per bin
 
@@ -87,6 +92,115 @@ for i in range(len(regularWardPos)):
     percentageRegularWardNeg[i] = regularWardNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
     percentageSemiIntensiveNeg[i] = semiIntensiveNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
     percentageIntensiveNeg[i] = intensiveNeg[i] / (totalAgePos[i] + totalAgeNeg[i]) * 100
+
+# [END] Stacked Barchart Percentage computation -----------------------------------------------------------------------
+
+# Barchart percentage per age quantile computation --------------------------------------------------------------------
+positiveAge = [0] * 20
+totalAge = [0] * 20
+percentageAge = [0] * 20
+
+for index, row in df.iterrows():
+    for i in range(20):
+        if df.iloc[index, 1] == i:
+            totalAge[i] += 1
+            if df.iloc[index, 2] == "positive":
+                positiveAge[i] += 1
+
+for i in range(len(positiveAge)):
+    percentageAge[i] = positiveAge[i] / totalAge[i] * 100
+
+ageQuantile = [str(i) for i in range(20)]
+
+print("\ndebugging info:-------------------------")
+print(f"length positiveAge: {len(positiveAge)}")
+print(f"length totalAge: {len(totalAge)}")
+print(f"length percentageAge: {len(percentageAge)}")
+print(f"\nageQuantile({len(ageQuantile)}): {ageQuantile}")
+print("\ndebugging info:-------------------------\n")
+
+# [END] Barchart percentage per age quantile computation --------------------------------------------------------------
+
+# Heatmap data selection and colors/bounds computations ---------------------------------------------------------------
+def get_bounds(n):
+    """Gets bounds for quads with n features"""
+    bottom = list(chain.from_iterable([[ii] * nlabels for ii in range(nlabels)]))
+    top = list(chain.from_iterable([[ii + 1] * nlabels for ii in range(nlabels)]))
+    left = list(chain.from_iterable([list(range(nlabels)) for ii in range(nlabels)]))
+    right = list(chain.from_iterable([list(range(1, nlabels + 1)) for ii in range(nlabels)]))
+    return top, bottom, left, right
+
+
+def get_colors(corr_array, colors):
+    """Aligns color values from palette with the correlation coefficient values"""
+    ccorr = arange(-1, 1, 1 / (len(colors) / 2))
+    color = []
+    for value in corr_array:
+        ind = bisect.bisect_left(ccorr, value)
+        color.append(colors[ind - 1])
+    return color
+
+dfVirus = df.iloc[:, 21:38]
+dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]
+del dfVirus['Mycoplasma pneumoniae']
+
+for i in range(16):
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)
+
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)
+
+correlation = dfVirus.corr()
+
+colors = list(reversed(colors[11]))  # we want an odd number to ensure 0 correlation is a distinct color
+labels = dfVirus.columns
+nlabels = len(labels)
+
+# [END] Heatmap data selection and colors/bounds computations ---------------------------------------------------------
+
+# Grid of bloodplots data selection/cleaning and restructuring --------------------------------------------------------
+SELECTION = [
+    'SARS-Cov-2 exam result',
+    'Patient age quantile',
+    'Hematocrit',
+    'Hemoglobin',
+    'Platelets',
+    'Red blood Cells',
+    'Lymphocytes',
+    'Mean corpuscular hemoglobin concentration (MCHC)',
+    'Leukocytes',
+    'Basophils',
+    'Mean corpuscular hemoglobin (MCH)',
+    'Eosinophils',
+    'Mean corpuscular volume (MCV)',
+    'Monocytes',
+    'Red blood cell distribution width (RDW)',
+    # 'Serum Glucose', <-- averaged around 4 values per quantile, too few
+]
+
+# selecting the required data
+df_blood = df[SELECTION].copy()
+
+dfPositive = df_blood[df_blood['SARS-Cov-2 exam result'] == "positive"]
+dfNegative = df_blood[df_blood['SARS-Cov-2 exam result'] == "negative"]
+
+dfPosAge = dfPositive['Patient age quantile']
+dfNegAge = dfNegative['Patient age quantile']
+
+del dfPositive['SARS-Cov-2 exam result']
+del dfNegative['SARS-Cov-2 exam result']
+
+dcPositive = dfPositive.to_dict("list")
+dcNegative = dfNegative.to_dict("list")
+
+bloodvaluelist = list(dcPositive)
+
+bloodvaluelist.remove('Patient age quantile')
+
+# // VISUALISATIONS CODE ================================================================================================================================================
+
+# tab 1 - Stacked bar chart -------------------------------------------------------------------------------------------
 
 wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]
 
@@ -157,33 +271,9 @@ p1.add_tools(HoverTool(
     ]
 ))
 
+# [END] tab 1 - Stacked bar chart -------------------------------------------------------------------------------------
 
-
-
-# Visualisation 2 - Bar chart - Assignment 3 ============================================================================================================================
-positiveAge = [0] * 20
-totalAge = [0] * 20
-percentageAge = [0] * 20
-
-for index, row in df.iterrows():
-    for i in range(20):
-        if df.iloc[index, 1] == i:
-            totalAge[i] += 1
-            if df.iloc[index, 2] == "positive":
-                positiveAge[i] += 1
-
-for i in range(len(positiveAge)):
-    percentageAge[i] = positiveAge[i] / totalAge[i] * 100
-
-ageQuantile = [str(i) for i in range(20)]
-
-print("\ndebugging info:-------------------------")
-print(f"length positiveAge: {len(positiveAge)}")
-print(f"length totalAge: {len(totalAge)}")
-print(f"length percentageAge: {len(percentageAge)}")
-print(f"\nageQuantile({len(ageQuantile)}): {ageQuantile}")
-print("\ndebugging info:-------------------------\n")
-
+# tab 2 - Bar chart ---------------------------------------------------------------------------------------------------
 sourcep2 = ColumnDataSource(data=dict(
     x=ageQuantile,
     y=percentageAge,
@@ -221,44 +311,9 @@ p2.add_tools(HoverTool(
     ]
 ))
 
+# [END] tab 2 - Bar chart ---------------------------------------------------------------------------------------------
 
-# Visualisation 3 - Heat map - Assignment 3 =============================================================================================================================
-dfVirus = df.iloc[:, 21:38]
-dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]
-del dfVirus['Mycoplasma pneumoniae']
-
-for i in range(16):
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)
-
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)
-
-correlation = dfVirus.corr()
-
-colors = list(reversed(colors[11]))  # we want an odd number to ensure 0 correlation is a distinct color
-labels = dfVirus.columns
-nlabels = len(labels)
-
-
-def get_bounds(n):
-    """Gets bounds for quads with n features"""
-    bottom = list(chain.from_iterable([[ii] * nlabels for ii in range(nlabels)]))
-    top = list(chain.from_iterable([[ii + 1] * nlabels for ii in range(nlabels)]))
-    left = list(chain.from_iterable([list(range(nlabels)) for ii in range(nlabels)]))
-    right = list(chain.from_iterable([list(range(1, nlabels + 1)) for ii in range(nlabels)]))
-    return top, bottom, left, right
-
-
-def get_colors(corr_array, colors):
-    """Aligns color values from palette with the correlation coefficient values"""
-    ccorr = arange(-1, 1, 1 / (len(colors) / 2))
-    color = []
-    for value in corr_array:
-        ind = bisect.bisect_left(ccorr, value)
-        color.append(colors[ind - 1])
-    return color
-
+# tab 3 - Heat map ----------------------------------------------------------------------------------------------------
 
 p3 = figure(plot_width=600, plot_height=600,
             x_range=(0, nlabels), y_range=(0, nlabels),
@@ -277,52 +332,14 @@ p3.quad(top=top, bottom=bottom, left=left,
         right=right, line_color='white',
         color=color_list)
 
+# [END] tab 3 - Heat map ----------------------------------------------------------------------------------------------
 
-# Visualisation 4 select the data that is going te be plotted ===========================================================================================================
-SELECTION = [
-    'SARS-Cov-2 exam result',
-    'Patient age quantile',
-    'Hematocrit',
-    'Hemoglobin',
-    'Platelets',
-    'Red blood Cells',
-    'Lymphocytes',
-    'Mean corpuscular hemoglobin concentration (MCHC)',
-    'Leukocytes',
-    'Basophils',
-    'Mean corpuscular hemoglobin (MCH)',
-    'Eosinophils',
-    'Mean corpuscular volume (MCV)',
-    'Monocytes',
-    'Red blood cell distribution width (RDW)',
-    # 'Serum Glucose', <-- averaged around 4 values per quantile, too few
-]
+# tab 4 - splom plot --------------------------------------------------------------------------------------------------
+
+figures = []
 
 # title of the plot
 TITLE = "Several blood chemicals versus Age quantile"
-
-# selecting the required data
-df_blood = df[SELECTION].copy()
-
-dfPositive = df_blood[df_blood['SARS-Cov-2 exam result'] == "positive"]
-dfNegative = df_blood[df_blood['SARS-Cov-2 exam result'] == "negative"]
-
-dfPosAge = dfPositive['Patient age quantile']
-dfNegAge = dfNegative['Patient age quantile']
-
-del dfPositive['SARS-Cov-2 exam result']
-del dfNegative['SARS-Cov-2 exam result']
-
-dcPositive = dfPositive.to_dict("list")
-dcNegative = dfNegative.to_dict("list")
-
-# print(dcBlood['Patient age quantile'])
-
-bloodvaluelist = list(dcPositive)
-
-bloodvaluelist.remove('Patient age quantile')
-
-figures = []
 
 sourcePos = ColumnDataSource(dfPositive)
 sourceNeg = ColumnDataSource(dfNegative)
@@ -360,16 +377,6 @@ for index in bloodvaluelist:
                        source=sourcePos, muted_alpha=0.1)
     n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
                        source=sourceNeg, muted_alpha=0.1)
-    
-    ''' CHANGE: The problem is that there are 2 distinct datasources, to include the tooltip we need to find a way to combine them
-    # hover tool p3
-    scatter.add_tools(HoverTool(
-        tooltips=[
-            ('standardized value:', '$y'),
-            ('pa', '$name')
-        ]
-    ))
-    '''
 
     posneg_list += [p]
     posneg_list += [n]
@@ -417,10 +424,11 @@ mapper = LinearColorMapper(palette=colors, low=-1, high=1)
 color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
 p3.add_layout(color_bar, 'right')
 
+# [END] tab 4 - splom plot --------------------------------------------------------------------------------------------
 
+# // TOOL GUI ===========================================================================================================================================================
 
-
-# Spinner GUI ===========================================================================================================================================================
+# Spinner GUI
 spinner = Spinner(title="Size", low=0, high=4, step=0.1, value=1, width=300)
 # spinner.js_link('value', points.glyph, 'radius')
 
@@ -436,7 +444,7 @@ toggle.js_on_click(CustomJS(code="""
     console.log('toggle: active=' + this.active, this.toString())
 """))
 
-# attempt at linking it all
+# Test button GUI
 lab = "Click me!"
 but = Button(label = lab)
 def clickedcode():      # this function would be called when the button is pressed, but it's not triggering...
@@ -448,8 +456,8 @@ def clickedcode():      # this function would be called when the button is press
 
 but.on_click(clickedcode)       # links the clickedcode to the button
 
-# select
-OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
+# choice menu GUI
+OPTIONS = [str(i) for i in range(20)]
 multi_choice = MultiChoice(value=["foo", "baz"], options=OPTIONS)
 multi_choice.js_on_change("value", CustomJS(code="""
     console.log('multi_choice: value=' + this.value, this.toString())
@@ -459,9 +467,11 @@ multi_choice.js_on_change("value", CustomJS(code="""
 # selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 # resultSelect = Select(title="What to show", options=selectoptions)
 
+# general webpage & plots
 title = Div(
     text="<b>Visualisation tool of patients tested for Covid-19 of the Hospital Israelita Albert Einstein, at São Paulo, Brazil</b>",
-    style={'font-size': '200%', 'color': 'black'}, width=800)
+    style={'font-size': '200%', 'color': 'black'}, width=800
+)
 
 text = [title]
 # gridplot
