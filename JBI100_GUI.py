@@ -1,14 +1,14 @@
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool, CustomJSHover, BoxZoomTool, ResetTool, \
     WheelZoomTool, PanTool, Range1d, DataRange1d
 from bokeh.models.widgets.buttons import Button
-from bokeh.transform import jitter
+from bokeh.transform import jitter, transform
 from bokeh.plotting import figure, output_file, show
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.layouts import column, row, layout, widgetbox, grid, GridBox, gridplot
 from bokeh.models import CustomJS, Slider, Toggle, Dropdown, MultiChoice, Spinner, Select, ColumnDataSource, Legend, \
-    LegendItem
+    LegendItem, BasicTicker
 from bokeh.transform import dodge
-from bokeh.palettes import RdBu as colors
+from bokeh.palettes import RdBu
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool
 import pandas as pd
 import bisect
@@ -119,40 +119,28 @@ print("\n----------------------------------------\n")
 # [END] Barchart percentage per age quantile computation --------------------------------------------------------------
 
 # Heatmap data selection and colors/bounds computations ---------------------------------------------------------------
-def get_bounds(n):                                  # @help@!! I don't understand this code!
-    """Gets bounds for quads with n features"""
-    bottom = list(chain.from_iterable([[ii] * nlabels for ii in range(nlabels)]))
-    top = list(chain.from_iterable([[ii + 1] * nlabels for ii in range(nlabels)]))
-    left = list(chain.from_iterable([list(range(nlabels)) for ii in range(nlabels)]))
-    right = list(chain.from_iterable([list(range(1, nlabels + 1)) for ii in range(nlabels)]))
-    return top, bottom, left, right
-
-
-def get_colors(corr_array, colors):                 # @help@!! I don't understand this code!
-    """Aligns color values from palette with the correlation coefficient values"""
-    ccorr = arange(-1, 1, 1 / (len(colors) / 2))
-    color = []
-    for value in corr_array:
-        ind = bisect.bisect_left(ccorr, value)
-        color.append(colors[ind - 1])
-    return color
-
 dfVirus = df.iloc[:, 21:38]                         # copy only relevant data columns using a list-slice
 dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]    # add covid result to the copy
 del dfVirus['Mycoplasma pneumoniae']                # remove this column because it has too few entries
 
 for i in range(16):
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)    # chagne strings to 0
-    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)        # chagne strings to 1
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)    # change strings to 0
+    dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["detected"], 1)        # change strings to 1
 
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)          # chagne strings to 0
-dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)          # chagne strings to 1
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["negative"], 0)          # change strings to 0
+dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)          # change strings to 1
 
 correlation = dfVirus.corr()                        # create correlation object
 
-colors = list(reversed(colors[11]))     # we want an odd number to ensure 0 correlation is a distinct color
-labels = dfVirus.columns                # set labels for the plot to dataframe columns
-nlabels = len(labels)                   # nr of labels
+correlation = dfVirus.corr()                        # create correlation object
+correlation.index.name = 'virusnames1'
+correlation.columns.name = 'virusnames2'
+
+correlation = correlation.stack().rename("value").reset_index() # needed for hovertool
+
+# changed range to make small deviations better possible, blue negative and red positive values
+mapper = LinearColorMapper(
+    palette=RdBu[9], low=2*correlation.value.min() , high=-2*correlation.value.min())
 
 # [END] Heatmap data selection and colors/bounds computations ---------------------------------------------------------
 
@@ -201,17 +189,17 @@ bloodvaluelist.remove('Patient age quantile')   # remove x-axis column from dict
 
 wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]    # legend names for the wards
 
-ageDevision = ["child and teen", "young adult and adult", "middle aged", "senior", "elderly"]   # labels of the bins
+ageDevision = ["Child and teen", "Young adult and adult", "Middle aged", "Senior", "Elderly"]   # labels of the bins
 if len(ageDevision) != nrofBins: raise ValueError (f"nr of labels for bins doesn't match nr of bins! ({len(ageDevision)} != {nrofBins})")
 
-positiveReg = ["regular ward positive", "regular ward negative"]            # labels of the positive and negative parts
-positiveSemi = ["semi-intensive unit positive", "semi-intensive unit negative"]
-positiveIntens = ["intensive care positive", "intensive care negative"]
+positiveReg = ["Regular ward positive", "Regular ward negative"]            # labels of the positive and negative parts
+positiveSemi = ["Semi-intensive unit positive", "Semi-intensive unit negative"]
+positiveIntens = ["Intensive care positive", "Intensive care negative"]
 
 # dictionaries for plotting the data
 dictDataReg = {'age group': ageDevision,
-               "regular ward positive": percentageRegularWardPos,
-               "regular ward negative": percentageRegularWardNeg,
+               "Regular ward positive": percentageRegularWardPos,
+               "Regular ward negative": percentageRegularWardNeg,
                "percentagePos"        : percentageRegularWardPos,           # a field with an identical name for every datasource for the tooltip
                "percentageNeg"        : percentageRegularWardNeg,            # a field with an identical name for every datasource for the tooltip
                "absolutePos"          : regularWardPos,                     # a field with the absolute number of people positive tested
@@ -219,8 +207,8 @@ dictDataReg = {'age group': ageDevision,
                }
 
 dictDataSemi = {'age group': ageDevision,
-                "semi-intensive unit positive": percentageSemiIntensivePos,
-                "semi-intensive unit negative": percentageSemiIntensiveNeg,
+                "Semi-intensive unit positive": percentageSemiIntensivePos,
+                "Semi-intensive unit negative": percentageSemiIntensiveNeg,
                 "percentagePos"               : percentageSemiIntensivePos, # a field with an identical name for every datasource for the tooltip
                 "percentageNeg"               : percentageSemiIntensiveNeg,  # a field with an identical name for every datasource for the tooltip
                 "absolutePos"                 : semiIntensivePos,           # a field with the absolute number of people positive tested
@@ -228,8 +216,8 @@ dictDataSemi = {'age group': ageDevision,
                 }
 
 dictDataIntens = {'age group': ageDevision,
-                  "intensive care positive": percentageIntensivePos,
-                  "intensive care negative": percentageIntensiveNeg,
+                  "Intensive care positive": percentageIntensivePos,
+                  "Intensive care negative": percentageIntensiveNeg,
                   "percentagePos"          : percentageIntensivePos,        # a field with an identical name for every datasource for the tooltip
                   "percentageNeg"          : percentageIntensiveNeg,         # a field with an identical name for every datasource for the tooltip
                   "absolutePos"            : intensivePos,                  # a field with the absolute number of people positive tested
@@ -275,8 +263,8 @@ resultSelect = Select(title="What to show", options=selectoptions)
 p1.add_tools(HoverTool(
     tooltips=[
         ('Age group', '@{age group}'),
-        ('Percentage negative', '@percentageNeg'),
-        ('Percentage positive', '@percentagePos'),
+        ('Percentage negative', '@percentageNeg{0.00}%'),
+        ('Percentage positive', '@percentagePos{0.00}%'),
         ('Number of negative patients', '@absoluteNeg'),
         ('Number of positive patients', '@absolutePos'),
         ('label', '$name'),
@@ -325,7 +313,7 @@ picker.js_link('color', vbar.glyph, 'line_color')
 p2.add_tools(HoverTool(
     tooltips=[
         ('Age quantile', '@x'),
-        ('Percentage', '@y'),
+        ('Percentage', '@y{0.00} %'),
         ('Number of patients', '@total'),
         ('Number of positive patients', '@positive')
     ]
@@ -334,24 +322,46 @@ p2.add_tools(HoverTool(
 # [END] tab 2 - Bar chart ---------------------------------------------------------------------------------------------
 
 # tab 3 - Heat map ----------------------------------------------------------------------------------------------------
+#  based on https://stackoverflow.com/questions/39191653/python-bokeh-how-to-make-a-correlation-plot
 
 p3 = figure(plot_width=600, plot_height=600,                # figure object for the heatmap
-            x_range=(0, nlabels), y_range=(0, nlabels),
-            title="Correlation Coefficient Heatmap",
-            tools="save", toolbar_location="right")
+            x_range=list(correlation.virusnames1.drop_duplicates()),
+            y_range=list(correlation.virusnames2.drop_duplicates()),
+            title="Correlation Coefficient between different virusses", toolbar_location="right",
+            tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"]
+            )
+
+# Create square for heatmap
+p3.rect(
+    x="virusnames1",
+    y="virusnames2",
+    width=1,
+    height=1,
+    source=ColumnDataSource(correlation),
+    line_color='white',
+    fill_color=transform('value', mapper))
 
 p3.xgrid.grid_line_color = None                             # remove gridlines
 p3.ygrid.grid_line_color = None
 p3.xaxis.major_label_orientation = pi / 4                   # rotate labels by 45deg (pi/4 rad => 45deg)
 p3.yaxis.major_label_orientation = pi / 4
 
-top, bottom, left, right = get_bounds(nlabels)              # creates sqaures for plot
-color_list = get_colors(correlation.values.flatten(), colors)
+# Add legend
+color_bar = ColorBar(
+    color_mapper=mapper,
+    location=(0, 0),
+    ticker=BasicTicker(desired_num_ticks=13))  # number of values next to the legend
 
-p3.quad(top=top, bottom=bottom, left=left,                  # add squares to plot
-        right=right, line_color='white',
-        color=color_list)
+p3.add_layout(color_bar, 'right')
 
+# add hovertool
+p3.add_tools(HoverTool(
+    tooltips=[
+        ('Virus 1', '@virusnames1'),
+        ('Virus 2', '@virusnames2'),
+        ('Correlation coefficient', '@value{0.00}'),
+    ]
+))
 # [END] tab 3 - Heat map ----------------------------------------------------------------------------------------------
 
 # tab 4 - splom plot --------------------------------------------------------------------------------------------------
@@ -432,23 +442,6 @@ show_figures = figures
 
 splom = gridplot(show_figures, ncols=3, toolbar_location='right')
 p4 = gridplot([[splom, dum_fig]], toolbar_location=None)
-# end vis4
-
-# Set ticks with labels
-ticks = [tick + 0.5 for tick in list(range(nlabels))]
-tick_dict = OrderedDict([[tick, labels[ii]] for ii, tick in enumerate(ticks)])
-# Create the correct number of ticks for each axis
-p3.xaxis.ticker = ticks
-p3.yaxis.ticker = ticks
-# Override the labels
-p3.xaxis.major_label_overrides = tick_dict
-p3.yaxis.major_label_overrides = tick_dict
-
-# Setup color bar
-mapper = LinearColorMapper(palette=colors, low=-1, high=1)
-color_bar = ColorBar(color_mapper=mapper, location=(0, 0))
-p3.add_layout(color_bar, 'right')
-
 # [END] tab 4 - splom plot --------------------------------------------------------------------------------------------
 
 # // TOOL GUI ===========================================================================================================================================================
