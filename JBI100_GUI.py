@@ -277,8 +277,8 @@ p1.add_tools(HoverTool(
         ('Age group', '@{age group}'),
         ('Percentage negative', '@percentageNeg'),
         ('Percentage positive', '@percentagePos'),
-        ('Number of positive patients', '@absoluteNeg'),
-        ('Number of negative patients', '@absolutePos'),
+        ('Number of negative patients', '@absoluteNeg'),
+        ('Number of positive patients', '@absolutePos'),
         ('label', '$name'),
     ]
 ))
