@@ -213,21 +213,27 @@ dictDataReg = {'age group': ageDevision,
                "regular ward positive": percentageRegularWardPos,
                "regular ward negative": percentageRegularWardNeg,
                "percentagePos"        : percentageRegularWardPos,           # a field with an identical name for every datasource for the tooltip
-               "percentageNeg"        : percentageRegularWardNeg            # a field with an identical name for every datasource for the tooltip
+               "percentageNeg"        : percentageRegularWardNeg,            # a field with an identical name for every datasource for the tooltip
+               "absolutePos"          : regularWardPos,                     # a field with the absolute number of people positive tested
+               "absoluteNeg"          : regularWardNeg                      # a field with the absolute number of people negative tested
                }
 
 dictDataSemi = {'age group': ageDevision,
                 "semi-intensive unit positive": percentageSemiIntensivePos,
                 "semi-intensive unit negative": percentageSemiIntensiveNeg,
                 "percentagePos"               : percentageSemiIntensivePos, # a field with an identical name for every datasource for the tooltip
-                "percentageNeg"               : percentageSemiIntensiveNeg  # a field with an identical name for every datasource for the tooltip
+                "percentageNeg"               : percentageSemiIntensiveNeg,  # a field with an identical name for every datasource for the tooltip
+                "absolutePos"                 : semiIntensivePos,           # a field with the absolute number of people positive tested
+                "absoluteNeg"                 : semiIntensiveNeg            # a field with the absolute number of people negative tested
                 }
 
 dictDataIntens = {'age group': ageDevision,
                   "intensive care positive": percentageIntensivePos,
                   "intensive care negative": percentageIntensiveNeg,
                   "percentagePos"          : percentageIntensivePos,        # a field with an identical name for every datasource for the tooltip
-                  "percentageNeg"          : percentageIntensiveNeg         # a field with an identical name for every datasource for the tooltip
+                  "percentageNeg"          : percentageIntensiveNeg,         # a field with an identical name for every datasource for the tooltip
+                  "absolutePos"            : intensivePos,                  # a field with the absolute number of people positive tested
+                  "absoluteNeg"            : intensiveNeg                   # a field with the absolute number of people negative tested
                   }
 
 sourceReg = ColumnDataSource(data=dictDataReg)          # convert dictionaries to datasources
@@ -268,9 +274,11 @@ resultSelect = Select(title="What to show", options=selectoptions)
 # Hover tooltips
 p1.add_tools(HoverTool(
     tooltips=[
-        ('age group', '@{age group}'),
-        ('percentage positive', '@percentagePos'),
-        ('percentage negative', '@percentageNeg'),
+        ('Age group', '@{age group}'),
+        ('Percentage negative', '@percentageNeg'),
+        ('Percentage positive', '@percentagePos'),
+        ('Number of positive patients', '@absoluteNeg'),
+        ('Number of negative patients', '@absolutePos'),
         ('label', '$name'),
     ]
 ))
@@ -316,10 +324,10 @@ picker.js_link('color', vbar.glyph, 'line_color')
 # hover tool p2
 p2.add_tools(HoverTool(
     tooltips=[
-        ('age quantile', '@x'),
-        ('percentage', '@y'),
-        ('number of patients', '@total'),
-        ('number of positive patients', '@positive')
+        ('Age quantile', '@x'),
+        ('Percentage', '@y'),
+        ('Number of patients', '@total'),
+        ('Number of positive patients', '@positive')
     ]
 ))
 
