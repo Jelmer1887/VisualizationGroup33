@@ -1,5 +1,6 @@
+from bokeh.core.enums import Dimensions
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool, CustomJSHover, BoxZoomTool, ResetTool, \
-    WheelZoomTool, PanTool, Range1d, DataRange1d
+    WheelZoomTool, PanTool, Range1d, DataRange1d, glyph
 from bokeh.models.widgets.buttons import Button
 from bokeh.transform import jitter, transform
 from bokeh.plotting import figure, output_file, show
@@ -283,30 +284,79 @@ sourcep2 = ColumnDataSource(data=dict(  # create and convert dictionary to datas
 ))
 
 # // 2 different versions of the plot, to re-arrange the data
-# sorted on y value, from low to high
+
+# 1) figure sorted on y value, from low to high
 sorted_ageQuantile = sorted(ageQuantile, key=lambda x: percentageAge[ageQuantile.index(x)])
 p2 = figure(
-    x_range=sorted_ageQuantile,
-    y_range=(0, int(max(percentageAge)) + 1),
-    plot_height=250, title="Percentage positive tests per age quartile", toolbar_location="right",
-    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"],
-    y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
+    # axis properties
+    x_range = sorted_ageQuantile,
+    y_range = (0, int(max(percentageAge)) + 1),
+    y_axis_label = "Percentage of age group with a positive Covid-19 test", 
+    x_axis_label = "Age quantiles",
 
-#  sorted on age quantile
+    # plot properties
+    plot_height = 250, 
+    title = "Percentage positive tests per age quartile", 
+    toolbar_location = "right",
+    tools = [WheelZoomTool(), ResetTool(), PanTool(), "save", "tap"],
+)
+
+# 2) figure sorted on age quantile
 p2 = figure(
+    # axis properties
     x_range=ageQuantile,
     y_range=(0, int(max(percentageAge)) + 1),
-    plot_height=250, title="Percentage positive tests per age quantile", toolbar_location="right",
-    tools=[WheelZoomTool(), ResetTool(), PanTool(), "save"],
-    y_axis_label="Percentage of age group with a positive Covid-19 test", x_axis_label = "Age quantiles")
-p2.x_range.max_interval = 19
+    y_axis_label="Percentage of age group with a positive Covid-19 test", 
+    x_axis_label = "Age quantiles",
 
-vbar = p2.vbar(x='x', top='y', width=0.5, source=sourcep2, color = 'blue')  # creates bars
+    # plot properties
+    plot_height=250, 
+    title="Percentage positive tests per age quantile", 
+    toolbar_location="right",
+    tools=[WheelZoomTool(), ResetTool(), PanTool(), BoxSelectTool(), "save", "tap"],
+)
+
+p2.x_range.max_interval = 19    # sets x-axis maximum
+
+vbar_renderer = p2.vbar(                 # creates bars
+    x='x', 
+    top='y', 
+    width=0.5, 
+    source=sourcep2,            # defines source
+    color = 'blue',             # default color of the bars
+
+    # properties of selected / unselected bars
+    #selection_fill_alpha = 1.0,                     # opacity of selected bar
+    #nonselection_fill_alpha=0.2,                    # opacity of non-selected bar
+)
+from bokeh.models.glyphs import VBar
+vbar_selected = VBar(
+    fill_alpha = 0.2,
+    fill_color = 'blue',
+    line_color = 'blue',
+    hatch_pattern = 'right_diagonal_line',
+    hatch_color = 'blue',
+    hatch_alpha = 1.0,
+    hatch_weight = 0.5
+)
+vbar_nonselected = VBar(
+    fill_alpha = 0.2,
+    fill_color = 'blue',
+    line_color = 'blue'
+)
+vbar_renderer.selection_glyph = vbar_selected
+vbar_renderer.nonselection_glyph = vbar_nonselected
+
 p2.xgrid.grid_line_color = None     # removes gridlines
 
 picker = ColorPicker(title="Line Color")            # allows to change the color of the bars
-picker.js_link('color', vbar.glyph, 'fill_color')   # link the color properties to the selector
-picker.js_link('color', vbar.glyph, 'line_color')
+picker.js_link('color', vbar_renderer.selection_glyph, 'fill_color')        # link the selected bar color properties to the selector
+picker.js_link('color', vbar_renderer.selection_glyph, 'line_color')
+picker.js_link('color', vbar_renderer.selection_glyph, 'hatch_color')
+picker.js_link('color', vbar_renderer.nonselection_glyph, 'fill_color')     # link the non-selected bar color properties to the selector
+picker.js_link('color', vbar_renderer.nonselection_glyph, 'line_color')
+picker.js_link('color', vbar_renderer.glyph, 'fill_color')                  # link the bar color properties to the selector for when no bar has been selected
+picker.js_link('color', vbar_renderer.glyph, 'line_color')
 
 
 # hover tool p2
