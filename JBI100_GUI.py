@@ -1,3 +1,22 @@
+'''
+JBI100 - Visualisation 2020/2021 Group 33 Visualisation Tool
+Group:
+- Wouter
+- Sjoerd
+- Rick
+- Marloes
+- Jelmer
+
+Visualisation framework: Bokeh libary
+Visualisation coded following examples from documentation:
+https://docs.bokeh.org/en/latest/docs/user_guide.html
+
+Providing data-sources for plot; basic structure following example from documentation: 
+https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
+https://docs.bokeh.org/en/latest/docs/user_guide/data.html#columndatasource 
+https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas 
+'''
+
 from bokeh.core.enums import Dimensions
 from bokeh.models import ColorBar, LinearColorMapper, HoverTool, BoxSelectTool, CustomJSHover, BoxZoomTool, ResetTool, \
     WheelZoomTool, PanTool, Range1d, DataRange1d, glyph
@@ -197,6 +216,7 @@ positiveReg = ["Regular ward positive", "Regular ward negative"]            # la
 positiveSemi = ["Semi-intensive unit positive", "Semi-intensive unit negative"]
 positiveIntens = ["Intensive care positive", "Intensive care negative"]
 
+# Basic structure following example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
 # dictionaries for plotting the data
 dictDataReg = {'age group': ageDevision,
                "Regular ward positive": percentageRegularWardPos,
@@ -275,6 +295,7 @@ p1.add_tools(HoverTool(
 # [END] tab 1 - Stacked bar chart -------------------------------------------------------------------------------------
 
 # tab 2 - Bar chart ---------------------------------------------------------------------------------------------------
+# Basic structure following example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
 ageQuantile = [str(i) for i in range(20)]           # list of labels
 sourcep2 = ColumnDataSource(data=dict(  # create and convert dictionary to datasource
     x=ageQuantile,
@@ -415,7 +436,7 @@ p3.add_tools(HoverTool(
 # [END] tab 3 - Heat map ----------------------------------------------------------------------------------------------
 
 # tab 4 - splom plot --------------------------------------------------------------------------------------------------
-
+# Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas 
 figures = []                                                # list to contain all subplots
 
 # title of the plot
