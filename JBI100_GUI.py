@@ -43,10 +43,11 @@ from bokeh.models.widgets import Div
 from bokeh.models.widgets import Paragraph
 from bokeh.models.widgets import PreText
 from bokeh.models import ColorPicker
+from bokeh.plotting import figure, curdoc # for the server
 
 plot = figure(tools="pan,wheel_zoom,box_zoom,reset")        # I need to know if this is still needed?
 plot.add_tools(BoxSelectTool(dimensions="width"))
-output_file("test.html")                                    # sets outputfile for the resulting webpage tool
+#output_file("test.html")                                    # sets outputfile for the resulting webpage tool
 
 
 # // DATA PROCESSING ====================================================================================================================================================
@@ -533,18 +534,6 @@ toggle.js_on_click(CustomJS(code="""
     console.log('toggle: active=' + this.active, this.toString())
 """))
 
-# Test button GUI
-lab = "Click me!"
-but = Button(label = lab)
-def clickedcode():      # this function would be called when the button is pressed, but it's not triggering...
-    if lab == "Click me!":      # I tried changing the label but that did not happen
-        lab = "Clicked"
-    else:
-        lab = "Click me!"
-    print("button was clicked!")       # nothing was printed to the console either
-
-but.on_click(clickedcode)       # links the clickedcode to the button
-
 # choice menu GUI
 OPTIONS = [str(i) for i in range(20)]
 multi_choice = MultiChoice(value=["foo", "baz"], options=OPTIONS)
@@ -555,6 +544,17 @@ multi_choice.js_on_change("value", CustomJS(code="""
 # # SELECT menu GUI
 # selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 # resultSelect = Select(title="What to show", options=selectoptions)
+
+# TOOL BUTTON CALLBACKS -----------------------------------------------------------------------------------------------
+# Test button GUI
+lab = "Click me!"
+but = Button(label = lab)
+def callback_button1():         # simple test callback -> changes lable on button and reports a click to the console
+    print("button was clicked!")
+
+but.on_click(callback_button1)       # links the clickedcode to the button
+
+# [END] TOOL BUTTON CALLBACKS -----------------------------------------------------------------------------------------
 
 # general webpage & plots
 title = Div(
@@ -591,5 +591,7 @@ tab5 = Panel(child=p, title="All visualisations")
 tabs = Tabs(tabs=[tab5, tab1, tab2, tab3, tab4])
 
 layout = layout([[text], [controls, tabs]])
-show(layout)
+#show(layout)
 print(totalAge)
+
+curdoc().add_root(layout)
