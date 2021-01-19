@@ -166,9 +166,74 @@ mapper = LinearColorMapper(
 # [END] Heatmap data selection and colors/bounds computations ---------------------------------------------------------
 
 # Grid of bloodplots data selection/cleaning and restructuring --------------------------------------------------------
-SELECTION = [                           # list of column to be used in visualisation (blood value columns)
+SELECTION = [
     'SARS-Cov-2 exam result',
     'Patient age quantile',
+    'Hematocrit',
+    'Hemoglobin',
+    'Platelets',
+    'Mean platelet volume ',
+    'Red blood Cells',
+    'Lymphocytes',
+    'Mean corpuscular hemoglobin concentration (MCHC)',
+    'Leukocytes',
+    'Basophils',
+    'Mean corpuscular hemoglobin (MCH)',
+    'Eosinophils',
+    'Mean corpuscular volume (MCV)',
+    'Monocytes',
+    'Red blood cell distribution width (RDW)',
+    'Serum Glucose', #averaged around 4 values per quantile
+    'Neutrophils',
+    'Urea',
+    'Proteina C reativa mg/dL',
+    'Creatinine',
+    'Potassium',
+    'Sodium',
+    'Alanine transaminase',
+    'Aspartate transaminase',
+    'Gamma-glutamyltransferase ',
+    'Total Bilirubin',
+    'Direct Bilirubin',
+    'Indirect Bilirubin',
+    'Alkaline phosphatase',
+    'Ionized calcium ',
+    'Magnesium',
+    'pCO2 (venous blood gas analysis)',
+    'Hb saturation (venous blood gas analysis)',
+    'Base excess (venous blood gas analysis)',
+    'pO2 (venous blood gas analysis)',
+    'Total CO2 (venous blood gas analysis)',
+    'pH (venous blood gas analysis)',
+    'HCO3 (venous blood gas analysis)',
+    'Rods #',
+    'Segmented',
+    'Promyelocytes',
+    'Metamyelocytes',
+    'Myelocytes',
+    'Urine - Density',
+    'Urine - Red blood cells',
+    'Relationship (Patient/Normal)',
+    'International normalized ratio (INR)',
+    'Lactic Dehydrogenase',
+    'Creatine phosphokinase (CPK) ',
+    'Ferritin',
+    'Arterial Lactic Acid',
+    'Lipase dosage',
+    'Albumin',
+    'Hb saturation (arterial blood gases)',
+    'pCO2 (arterial blood gas analysis)',
+    'Base excess (arterial blood gas analysis)',
+    'pH (arterial blood gas analysis)',
+    'Total CO2 (arterial blood gas analysis)',
+    'HCO3 (arterial blood gas analysis)',
+    'pO2 (arterial blood gas analysis)',
+    'Arteiral Fio2',
+    'Phosphor',
+    'ctO2 (arterial blood gas analysis)'
+]
+
+bloodCategories = [                           # list of column to be used in visualisation (blood value columns)
     'Hematocrit',
     'Hemoglobin',
     'Platelets',
@@ -182,8 +247,64 @@ SELECTION = [                           # list of column to be used in visualisa
     'Mean corpuscular volume (MCV)',
     'Monocytes',
     'Red blood cell distribution width (RDW)',
-    # 'Serum Glucose', <-- averaged around 4 values per quantile, too few entries! So not included
-]
+    'Serum Glucose', #<-- averaged around 4 values per quantile, too few entries! So not included
+    'Neutrophils'
+]#15
+
+enzymProteineMineral = [
+    'Alanine transaminase',  # enzym
+    'Aspartate transaminase',  # enzym
+    'Gamma-glutamyltransferase ',  # enzym
+    'Alkaline phosphatase',  # enzym
+    'Lactic Dehydrogenase',  # enzym
+    'Creatine phosphokinase (CPK) ',  # enzym
+    'Lipase dosage',  # enzym
+    'Protein C reativa mg/dL',  # proteïne
+    'Ferritin',  # proteine
+    'Albumin',  # proteine
+    'Potassium',  # mineral
+    'Sodium',  # mineral
+    'Ionized calcium ',  # mineral
+    'Magnesium',  # mineral
+    'Phosphor',  # mineral
+]#15
+
+bloodGasAnalysis = [
+    'pCO2 (venous blood gas analysis)',  # blood gas analysis
+    'Hb saturation (venous blood gas analysis)',
+    'Base excess (venous blood gas analysis)',
+    'pO2 (venous blood gas analysis)',
+    'Total CO2 (venous blood gas analysis)',
+    'pH (venous blood gas analysis)',
+    'HCO3 (venous blood gas analysis)',
+    'Arterial Lactic Acid',  # arterial blood gases
+    'Hb saturation (arterial blood gases)',
+    'pCO2 (arterial blood gas analysis)',
+    'Base excess (arterial blood gas analysis)',
+    'pH (arterial blood gas analysis)',
+    'Total CO2 (arterial blood gas analysis)',
+    'HCO3 (arterial blood gas analysis)',
+    'pO2 (arterial blood gas analysis)',
+    'Arteiral Fio2',
+    'ctO2 (arterial blood gas analysis)'
+]#17
+
+otherTests = [
+    'Urea', #afvalstof
+    'Creatinine', #afvalstof van spieren
+    'Total Bilirubin', #afvalstof na afbraak rode bloedcel
+    'Direct Bilirubin',
+    'Indirect Bilirubin',
+    'Rods #',
+    'Segmented',
+    'Promyelocytes',  # grow up to fight infection, come from white blood cel
+    'Metamyelocytes',
+    'Myelocytes',  # together with previous 2 precursor of neutrophils
+    'Urine - Density',  # urine
+    'Urine - Red blood cells',  # urine
+    'Relationship (Patient/Normal)',
+    'International normalized ratio (INR)',
+]#14
 
 # selecting the required data
 df_blood = df[SELECTION].copy()         # copy selection from main dataframe
@@ -196,13 +317,6 @@ dfNegAge = dfNegative['Patient age quantile']
 
 del dfPositive['SARS-Cov-2 exam result']        # remove covid test result from copy
 del dfNegative['SARS-Cov-2 exam result']        # remove covid test result from copy
-
-dcPositive = dfPositive.to_dict("list")         # convert dataframes to dictionaries
-dcNegative = dfNegative.to_dict("list")
-
-bloodvaluelist = list(dcPositive)               # convert df of blood values for axis to list
-
-bloodvaluelist.remove('Patient age quantile')   # remove x-axis column from dictionary for axis 
 
 # // VISUALISATIONS CODE ================================================================================================================================================
 
@@ -436,85 +550,94 @@ p3.add_tools(HoverTool(
 ))
 # [END] tab 3 - Heat map ----------------------------------------------------------------------------------------------
 
-# tab 4 - splom plot --------------------------------------------------------------------------------------------------
-# Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas 
-figures = []                                                # list to contain all subplots
+# tab 4/5/6/7 - splom plot --------------------------------------------------------------------------------------------------
+# Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas
 
 # title of the plot
-TITLE = "Several blood chemicals versus Age quantile"
 
 sourcePos = ColumnDataSource(dfPositive)                    # convert dataframes to datasources
 sourceNeg = ColumnDataSource(dfNegative)
 
-posneg_list = []                                            # list to contain all dots in a plot
-colorPositive = "blue"                                      # color of positively tested
-colorNegative = "red"                                       # color of negatively tested
 
-for index in bloodvaluelist:                                # create subplots for every bloodtype
-    #  for the first one don't use x_range, the remaining all will use the same x_range
-    if index != "Hematocrit":                               # a seperate plot is made for the first entry
-        scatter = figure(
-            title=index, 
-            plot_width=400, 
-            plot_height=300, 
-            x_range=figures[0].x_range,
-            y_range=figures[0].y_range,
-            tools="save, pan, reset, wheel_zoom, box_select", 
-            x_axis_label='age quantile',
-            y_axis_label='standardized test result'
-        )
+def scatterPlots(categories):
+    TITLE = "Several blood chemicals versus Age quantile"
+    figures = []  # list to contain all subplots
+    posneg_list = []                                            # list to contain all dots in a plot
+    colorPositive = "blue"                                      # color of positively tested
+    colorNegative = "red"                                       # color of negatively tested
 
-    else:
-        scatter = figure(                                   # plots for all the other blood values
-            title=index,                                    # ... these are the same but they copy their axis from the first one
-            plot_width=400, 
-            plot_height=300, 
-            y_range=(-4, 4),
-            tools="save, pan, reset, wheel_zoom, box_select", 
-            x_axis_label='age quantile',
-            y_axis_label='standardized test result'
-        )
+    count = 0
+    for index in categories:                                # create subplots for every bloodtype
+        #  for the first one don't use x_range, the remaining all will use the same x_range
+        if count != 0:                               # a seperate plot is made for the first entry
+            scatter = figure(
+                title=index,
+                plot_width=400,
+                plot_height=300,
+                x_range=figures[0].x_range,
+                y_range=figures[0].y_range,
+                tools="save, pan, reset, wheel_zoom, box_select",
+                x_axis_label='age quantile',
+                y_axis_label='standardized test result'
+            )
 
-    # create dot objects for the points in the plots
-    p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
-                       source=sourcePos, muted_alpha=0.1)
-    n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
-                       source=sourceNeg, muted_alpha=0.1)
+        else:
+            scatter = figure(                                   # plots for all the other blood values
+                title=index,                                    # ... these are the same but they copy their axis from the first one
+                plot_width=400,
+                plot_height=300,
+                y_range=(-4, 4),
+                tools="save, pan, reset, wheel_zoom, box_select",
+                x_axis_label='age quantile',
+                y_axis_label='standardized test result'
+            )
 
-    posneg_list += [p]                                      # add dots to list
-    posneg_list += [n]
+        # create dot objects for the points in the plots
+        p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
+                           source=sourcePos, muted_alpha=0.1)
+        n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
+                           source=sourceNeg, muted_alpha=0.1)
 
-    figures.append(scatter)                                 # add figure to the list of subfigures
+        posneg_list += [p]                                      # add dots to list
+        posneg_list += [n]
 
-# Lines with the same color will share a same legend item
-legend_items = [LegendItem(label="Covid-19 positive",
-                           renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorPositive]),
-                LegendItem(label="Covid-19 negative",
-                           renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorNegative])]
+        figures.append(scatter)                                 # add figure to the list of subfigures
+        count += 1
+    # Lines with the same color will share a same legend item
+    legend_items = [LegendItem(label="Covid-19 positive",
+                               renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorPositive]),
+                    LegendItem(label="Covid-19 negative",
+                               renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorNegative])]
 
-# use a dummy figure for the legend
-dum_fig = figure(plot_width=300, plot_height=600, outline_line_alpha=0, toolbar_location=None)
+    # use a dummy figure for the legend
+    dum_fig = figure(plot_width=300, plot_height=600, outline_line_alpha=0, toolbar_location=None)
 
-# set the components of the figure invisible
-for fig_component in [dum_fig.grid[0], dum_fig.ygrid[0], dum_fig.xaxis[0], dum_fig.yaxis[0]]:
-    fig_component.visible = False
+    # set the components of the figure invisible
+    for fig_component in [dum_fig.grid[0], dum_fig.ygrid[0], dum_fig.xaxis[0], dum_fig.yaxis[0]]:
+        fig_component.visible = False
 
-# The points referred by the legend need to be present in the figure ,so add them to figure renderers
-dum_fig.renderers += posneg_list
+    # The points referred by the legend need to be present in the figure ,so add them to figure renderers
+    dum_fig.renderers += posneg_list
 
-# set the figure range outside of the range of all glyphs
-dum_fig.x_range.end = 1005
-dum_fig.x_range.start = 1000
+    # set the figure range outside of the range of all glyphs
+    dum_fig.x_range.end = 1005
+    dum_fig.x_range.start = 1000
 
-# add the legend
-dum_fig.add_layout(Legend(click_policy='mute', location='top_left', border_line_alpha=0, items=legend_items))
+    # add the legend
+    dum_fig.add_layout(Legend(click_policy='mute', location='top_left', border_line_alpha=0, items=legend_items))
 
-# copy list to make it later possible to delete/ add items for the list without using original list (NOT YET USED)
-show_figures = figures
+    # copy list to make it later possible to delete/ add items for the list without using original list (NOT YET USED)
+    show_figures = figures
 
-splom = gridplot(show_figures, ncols=3, toolbar_location='right')
-p4 = gridplot([[splom, dum_fig]], toolbar_location=None)
-# [END] tab 4 - splom plot --------------------------------------------------------------------------------------------
+    splom = gridplot(show_figures, ncols=3, toolbar_location='right')
+    plot = gridplot([[splom, dum_fig]], toolbar_location=None)
+    return plot
+
+p4 = scatterPlots(bloodCategories)
+p5 = scatterPlots(bloodGasAnalysis)
+p6 = scatterPlots(enzymProteineMineral)
+p7 = scatterPlots(otherTests)
+# [END] tab 4/5/6/7 - splom plot --------------------------------------------------------------------------------------------
 
 # // TOOL GUI ===========================================================================================================================================================
 
@@ -580,18 +703,25 @@ l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2, picker]], sizing_mode='fixed', height=600, width=150)
 l3 = layout([[p3]], sizing_mode='fixed', height=600, width=150)
 l4 = layout([[p4]], sizing_mode='fixed', height=600, width=150)
+l5 = layout([[p5]], sizing_mode='fixed', height=600, width=150)
+l6 = layout([[p6]], sizing_mode='fixed', height=600, width=150)
+l7 = layout([[p7]], sizing_mode='fixed', height=600, width=150)
 
 # Tab setup
 tab1 = Panel(child=l1, title="Division per hospital ward")
 tab2 = Panel(child=l2, title="Age covid-19 patients")
-tab3 = Panel(child=l3, title="Heat map")
-tab4 = Panel(child=l4, title="Scatter plot bloodvalues")
-tab5 = Panel(child=p, title="All visualisations")
+tab3 = Panel(child=l3, title="Virus correlation")
+tab4 = Panel(child=l4, title="Bloodvalues")
+tab5 = Panel(child=l5, title="Blood gas analysis")
+tab6 = Panel(child=l6, title="Enzym & minerals & proteine")
+tab7 = Panel(child=l7, title="Other numerical tests")
+tab8 = Panel(child=p, title="All visualisations")
 
-tabs = Tabs(tabs=[tab5, tab1, tab2, tab3, tab4])
+tabs = Tabs(tabs=[tab8, tab1, tab2, tab3, tab4, tab5, tab6, tab7])
 
 layout = layout([[text], [controls, tabs]])
 #show(layout)
 print(totalAge)
 
 curdoc().add_root(layout)
+#bokeh serve --show JBI100_GUI.py
