@@ -638,46 +638,6 @@ p6 = scatterPlots(enzymProteineMineral)
 p7 = scatterPlots(otherTests)
 # [END] tab 4/5/6/7 - splom plot --------------------------------------------------------------------------------------------
 
-# // TOOL GUI ===========================================================================================================================================================
-
-# Spinner GUI
-spinner = Spinner(title="Size", low=0, high=4, step=0.1, value=1, width=300)
-# spinner.js_link('value', points.glyph, 'radius')
-
-# Dropdown menu GUI
-menu = [("Item 1", "item_1"), ("Item 2", "item_2"), None, ("Item 3", "item_3")]
-dropdown = Dropdown(label="Dropdown button", button_type="warning", menu=menu)
-dropdown.js_on_event("menu_item_click", CustomJS(code="console.log('dropdown: ' + this.item, this.toString())"))
-
-
-# Toggle button GUI
-toggle = Toggle(label="Button", button_type="success")
-toggle.js_on_click(CustomJS(code="""
-    console.log('toggle: active=' + this.active, this.toString())
-"""))
-
-# choice menu GUI
-OPTIONS = [str(i) for i in range(20)]
-multi_choice = MultiChoice(value=["foo", "baz"], options=OPTIONS)
-multi_choice.js_on_change("value", CustomJS(code="""
-    console.log('multi_choice: value=' + this.value, this.toString())
-"""))
-
-# # SELECT menu GUI
-# selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
-# resultSelect = Select(title="What to show", options=selectoptions)
-
-# TOOL BUTTON CALLBACKS -----------------------------------------------------------------------------------------------
-# Test button GUI
-lab = "Click me!"
-but = Button(label = lab)
-def callback_button1():         # simple test callback -> changes lable on button and reports a click to the console
-    print("button was clicked!")
-
-but.on_click(callback_button1)       # links the clickedcode to the button
-
-# [END] TOOL BUTTON CALLBACKS -----------------------------------------------------------------------------------------
-
 # general webpage & plots
 title = Div(
     text="<b>Visualisation tool of patients tested for Covid-19 of the Hospital Israelita Albert Einstein, at São Paulo, Brazil</b>",
@@ -695,8 +655,6 @@ p2.plot_height = 600
 p3.plot_width = 600
 p3.plot_height = 600
 
-# GUI Left column
-controls = [dropdown, spinner, toggle, multi_choice, but]
 # inputs = column(*controls, sizing_mode='fixed', height=300, width=500)
 l1 = layout([[p1]], sizing_mode='fixed', height=600, width=150)
 l2 = layout([[p2, picker]], sizing_mode='fixed', height=600, width=150)
@@ -718,7 +676,7 @@ tab8 = Panel(child=p, title="All visualisations")
 
 tabs = Tabs(tabs=[tab8, tab1, tab2, tab3, tab4, tab5, tab6, tab7])
 
-layout = layout([[text], [controls, tabs]])
+layout = layout([[text], [tabs]])
 #show(layout)
 print(totalAge)
 
