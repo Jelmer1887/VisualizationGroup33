@@ -257,7 +257,6 @@ enzymProteineMineral = [
     'Gamma-glutamyltransferase ',  # enzym
     'Alkaline phosphatase',  # enzym
     'Lactic Dehydrogenase',  # enzym
-    'Creatine phosphokinase (CPK) ',  # enzym
     'Lipase dosage',  # enzym
     'Protein C reativa mg/dL',  # proteïne
     'Ferritin',  # proteine
