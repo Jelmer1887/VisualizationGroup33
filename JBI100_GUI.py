@@ -58,6 +58,8 @@ plot.add_tools(BoxSelectTool(dimensions="width"))
 # - computing new data from available columns
 
 df = pd.read_excel(r'dataset.xlsx')         # import all data from the dataset as pandas dataframe
+del df['Partial thromboplastin time (PTT) '], df['Urine - Sugar'], df['Prothrombin time (PT), Activity'], df['Mycoplasma pneumoniae']
+    #columns with too few entries are removed
 
 # Stacked Barchart Percentage computation -----------------------------------------------------------------------------
 nrofBins = 5                                # nr of bins to put age quantiles in to
@@ -142,7 +144,6 @@ print("\n----------------------------------------\n")
 # Heatmap data selection and colors/bounds computations ---------------------------------------------------------------
 dfVirus = df.iloc[:, 21:38]                         # copy only relevant data columns using a list-slice
 dfVirus["SARS-Cov-2 exam result"] = df["SARS-Cov-2 exam result"]    # add covid result to the copy
-del dfVirus['Mycoplasma pneumoniae']                # remove this column because it has too few entries
 
 for i in range(16):
     dfVirus.iloc[:, i] = dfVirus.iloc[:, i].replace(["not_detected"], 0)    # change strings to 0
@@ -672,7 +673,7 @@ tab4 = Panel(child=l4, title="Bloodvalues")
 tab5 = Panel(child=l5, title="Blood gas analysis")
 tab6 = Panel(child=l6, title="Enzym & minerals & proteine")
 tab7 = Panel(child=l7, title="Other numerical tests")
-tab8 = Panel(child=p, title="All visualisations")
+tab8 = Panel(child=p, title="Grid-overview of visualizations")
 
 tabs = Tabs(tabs=[tab8, tab1, tab2, tab3, tab4, tab5, tab6, tab7])
 
