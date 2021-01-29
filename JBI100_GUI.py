@@ -671,7 +671,7 @@ tab2 = Panel(child=l2, title="Age covid-19 patients")
 tab3 = Panel(child=l3, title="Virus correlation")
 tab4 = Panel(child=l4, title="Blood values")
 tab5 = Panel(child=l5, title="Blood gas analysis")
-tab6 = Panel(child=l6, title="Enzym & minerals & proteine")
+tab6 = Panel(child=l6, title="Enzyme & Minerals & Protein")
 tab7 = Panel(child=l7, title="Remaining numerical tests")
 tab8 = Panel(child=p, title="Grid-overview of visualizations")
 
