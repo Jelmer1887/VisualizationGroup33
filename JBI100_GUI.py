@@ -173,7 +173,6 @@ SELECTION = [
     'Hematocrit',
     'Hemoglobin',
     'Platelets',
-    'Mean platelet volume ',
     'Red blood Cells',
     'Lymphocytes',
     'Mean corpuscular hemoglobin concentration (MCHC)',
@@ -187,7 +186,6 @@ SELECTION = [
     'Serum Glucose', #averaged around 4 values per quantile
     'Neutrophils',
     'Urea',
-    'Proteina C reativa mg/dL',
     'Creatinine',
     'Potassium',
     'Sodium',
@@ -217,11 +215,9 @@ SELECTION = [
     'Relationship (Patient/Normal)',
     'International normalized ratio (INR)',
     'Lactic Dehydrogenase',
-    'Creatine phosphokinase (CPK) ',
     'Ferritin',
     'Arterial Lactic Acid',
     'Lipase dosage',
-    'Albumin',
     'Hb saturation (arterial blood gases)',
     'pCO2 (arterial blood gas analysis)',
     'Base excess (arterial blood gas analysis)',
@@ -232,7 +228,7 @@ SELECTION = [
     'Arteiral Fio2',
     'Phosphor',
     'ctO2 (arterial blood gas analysis)'
-]
+]#60
 
 bloodCategories = [                           # list of column to be used in visualisation (blood value columns)
     'Hematocrit',
@@ -259,9 +255,7 @@ enzymProteineMineral = [
     'Alkaline phosphatase',  # enzym
     'Lactic Dehydrogenase',  # enzym
     'Lipase dosage',  # enzym
-    'Protein C reativa mg/dL',  # proteïne
     'Ferritin',  # proteine
-    'Albumin',  # proteine
     'Potassium',  # mineral
     'Sodium',  # mineral
     'Ionized calcium ',  # mineral
