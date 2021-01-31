@@ -1,20 +1,41 @@
 '''
 JBI100 - Visualisation 2020/2021 Group 33 Visualisation Tool
 Group:
-- Wouter
-- Sjoerd
-- Rick
-- Marloes
-- Jelmer
+- Wouter Tulp           -  1325833
+- Sjoerd Koop           -  1256920
+- Rick Hendriks         -  1569074
+- Marloes v.d. Burgt    -  1364235
+- Jelmer Schuttert      -  1480731
 
 Visualisation framework: Bokeh libary
 Visualisation coded following examples from documentation:
 https://docs.bokeh.org/en/latest/docs/user_guide.html
 
+
+exact reference:
+
 Providing data-sources for plot; basic structure following example from documentation: 
 https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
 https://docs.bokeh.org/en/latest/docs/user_guide/data.html#columndatasource 
 https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas 
+
+Creating a tooltip HoverTool:
+https://docs.bokeh.org/en/latest/docs/user_guide/tools.html#hovertool 
+
+Creating a colorpicker:
+https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html#colorpicker 
+
+Creating plots with bokeh; following basic structure from examples found in documentation:
+https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#basic
+https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#stacked 
+https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#scatters 
+
+Creating Heatmap; following structure by StackedOverflow:
+https://stackoverflow.com/questions/39191653/python-bokeh-how-to-make-a-correlation-plot 
+
+Creating a layout on the webpage; following structure from documentation:
+https://docs.bokeh.org/en/latest/docs/user_guide/layout.html#grids-layout-for-plots 
+
 '''
 
 from bokeh.core.enums import Dimensions
@@ -35,7 +56,6 @@ import bisect
 from math import pi
 from numpy import arange
 from itertools import chain
-from collections import OrderedDict
 from bokeh.io import output_file, show
 from bokeh.io import output_file, show
 from bokeh.layouts import widgetbox
@@ -43,12 +63,8 @@ from bokeh.models.widgets import Div
 from bokeh.models.widgets import Paragraph
 from bokeh.models.widgets import PreText
 from bokeh.models import ColorPicker
-from bokeh.plotting import figure, curdoc # for the server
-
-plot = figure(tools="pan,wheel_zoom,box_zoom,reset")        # I need to know if this is still needed?
-plot.add_tools(BoxSelectTool(dimensions="width"))
-#output_file("test.html")                                    # sets outputfile for the resulting webpage tool
-
+from bokeh.models.glyphs import VBar
+from bokeh.plotting import figure, curdoc # for the server (option not chosen)
 
 # // DATA PROCESSING ====================================================================================================================================================
 # The following section contains ALL data (pre)processing done on the dataset. This includes:
@@ -58,8 +74,9 @@ plot.add_tools(BoxSelectTool(dimensions="width"))
 # - computing new data from available columns
 
 df = pd.read_excel(r'dataset.xlsx')         # import all data from the dataset as pandas dataframe
+
+#columns with too few entries are removed
 del df['Partial thromboplastin time (PTT) '], df['Urine - Sugar'], df['Prothrombin time (PT), Activity'], df['Mycoplasma pneumoniae']
-    #columns with too few entries are removed
 
 # Stacked Barchart Percentage computation -----------------------------------------------------------------------------
 nrofBins = 5                                # nr of bins to put age quantiles in to
@@ -76,10 +93,10 @@ intensiveNeg = [0] * nrofBins
 totalAgePos = [0] * nrofBins
 totalAgeNeg = [0] * nrofBins
 
-
+# go over each entry
 for index, row in df.iterrows():
 
-    binofIndex = int(df.iloc[index, 1] / binSize)       # computes in which bin the current age quantile would be
+    binofIndex = int(df.iloc[index, 1] / binSize)       # computes in which bin the current rows age quantile would be
 
     # count the number of positive and negative patients per bin and per ward
     if df.iloc[index, 2] == "positive":
@@ -93,14 +110,14 @@ for index, row in df.iterrows():
 
     if df.iloc[index, 2] == "negative":                 
         totalAgeNeg[binofIndex] += 1
-        if df.iloc[index, 3] == 1:                      # technically, we are still repeating ourselves in the nested if/elif-statements here...
-            regularWardNeg[binofIndex] += 1             # ...so it can be done in a cleaner way... if we have time at the end we should invesitage using mappings to optimise this
+        if df.iloc[index, 3] == 1:
+            regularWardNeg[binofIndex] += 1
         elif df.iloc[index, 4] == 1:
             semiIntensiveNeg[binofIndex] += 1
         elif df.iloc[index, 5] == 1:
             intensiveNeg[binofIndex] += 1
 
-percentageRegularWardPos = [0] * nrofBins               # lists containing percentages computed from the data
+percentageRegularWardPos = [0] * nrofBins               # lists to be containing percentages computed from the data
 percentageSemiIntensivePos = [0] * nrofBins
 percentageIntensivePos = [0] * nrofBins
 
@@ -133,12 +150,6 @@ for index, row in df.iterrows():                    # go over all entries in the
 # compute percentage of positively tested per age quantile using a list comprehension (quicker than loop)
 percentageAge = [(positiveAge[i]/totalAge[i]) * 100 for i in range(len(positiveAge))]
 
-print("\ndebugging info:-------------------------") # some debugging info
-print(f"length positiveAge: {len(positiveAge)}")
-print(f"length totalAge: {len(totalAge)}")
-print(f"length percentageAge: {len(percentageAge)}")
-print("\n----------------------------------------\n")
-
 # [END] Barchart percentage per age quantile computation --------------------------------------------------------------
 
 # Heatmap data selection and colors/bounds computations ---------------------------------------------------------------
@@ -155,7 +166,7 @@ dfVirus.iloc[:, 16] = dfVirus.iloc[:, 16].replace(["positive"], 1)          # ch
 correlation = dfVirus.corr()                        # create correlation object
 
 correlation = dfVirus.corr()                        # create correlation object
-correlation.index.name = 'virusnames1'
+correlation.index.name = 'virusnames1'              # set names
 correlation.columns.name = 'virusnames2'
 
 correlation = correlation.stack().rename("value").reset_index() # needed for hovertool
@@ -167,7 +178,7 @@ mapper = LinearColorMapper(
 # [END] Heatmap data selection and colors/bounds computations ---------------------------------------------------------
 
 # Grid of bloodplots data selection/cleaning and restructuring --------------------------------------------------------
-SELECTION = [
+SELECTION = [           # names of all the columns to be included from the dataset
     'SARS-Cov-2 exam result',
     'Patient age quantile',
     'Hematocrit',
@@ -183,7 +194,7 @@ SELECTION = [
     'Mean corpuscular volume (MCV)',
     'Monocytes',
     'Red blood cell distribution width (RDW)',
-    'Serum Glucose', #averaged around 4 values per quantile
+    'Serum Glucose',
     'Neutrophils',
     'Urea',
     'Creatinine',
@@ -244,11 +255,11 @@ bloodCategories = [                           # list of column to be used in vis
     'Mean corpuscular volume (MCV)',
     'Monocytes',
     'Red blood cell distribution width (RDW)',
-    'Serum Glucose', #<-- averaged around 4 values per quantile, too few entries! So not included
+    'Serum Glucose',
     'Neutrophils'
 ]#15
 
-enzymProteineMineral = [
+enzymProteineMineral = [                      # list of column to be used in visualisation (enzymes)
     'Alanine transaminase',  # enzym
     'Aspartate transaminase',  # enzym
     'Gamma-glutamyltransferase ',  # enzym
@@ -263,7 +274,7 @@ enzymProteineMineral = [
     'Phosphor',  # mineral
 ]#15
 
-bloodGasAnalysis = [
+bloodGasAnalysis = [                          # list of column to be used in visualisation (blood gasses)
     'pCO2 (venous blood gas analysis)',  # blood gas analysis
     'Hb saturation (venous blood gas analysis)',
     'Base excess (venous blood gas analysis)',
@@ -283,7 +294,7 @@ bloodGasAnalysis = [
     'ctO2 (arterial blood gas analysis)'
 ]#17
 
-otherTests = [
+otherTests = [                                # list of column to be used in visualisation (others)
     'Urea', #afvalstof
     'Creatinine', #afvalstof van spieren
     'Total Bilirubin', #afvalstof na afbraak rode bloedcel
@@ -319,13 +330,15 @@ del dfNegative['SARS-Cov-2 exam result']        # remove covid test result from 
 wardDevision = ["regular ward", "semi-intensive unit", "intensive care"]    # legend names for the wards
 
 ageDevision = ["Child and teen", "Young adult and adult", "Middle aged", "Senior", "Elderly"]   # labels of the bins
+
+# raise error if the number of labels doesn't match the number of bins in the barchart
 if len(ageDevision) != nrofBins: raise ValueError (f"nr of labels for bins doesn't match nr of bins! ({len(ageDevision)} != {nrofBins})")
 
 positiveReg = ["Regular ward positive", "Regular ward negative"]            # labels of the positive and negative parts
 positiveSemi = ["Semi-intensive unit positive", "Semi-intensive unit negative"]
 positiveIntens = ["Intensive care positive", "Intensive care negative"]
 
-# Basic structure following example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
+# Basic structure for providing data in dictionaries following example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#providing-data 
 # dictionaries for plotting the data
 dictDataReg = {'age group': ageDevision,
                "Regular ward positive": percentageRegularWardPos,
@@ -365,6 +378,9 @@ colorsIntens = ["#B7950B", "#F9E79F"]
 
 
 # creating the bars
+# bar chart according to structure in documentation: https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html 
+# and https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#basic 
+# and https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#stacked 
 p1 = figure(x_range=ageDevision,
             title="Percentage of age group in hospital ward seperated by COVID-19 test result", toolbar_location="right",
             tools=([WheelZoomTool(), ResetTool(), PanTool(), "save"]), y_axis_label="Age group specific percentage per hospital ward")
@@ -385,11 +401,12 @@ p1.xgrid.grid_line_color = None
 p1.legend.location = "top_center"   # legend location
 p1.legend.orientation = "vertical"  # legend orientation (items below each other)
 
-# SELECT menu GUI       # @help@ What does this do??
+# SELECT menu GUI
 selectoptions = ["Postive tested on Covid-19 virus", "Negative tested on Covid-19 virus", "Show both"]
 resultSelect = Select(title="What to show", options=selectoptions)
 
 # Hover tooltips
+# Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/tools.html#hovertool 
 p1.add_tools(HoverTool(
     tooltips=[
         ('Age group', '@{age group}'),
@@ -413,7 +430,8 @@ sourcep2 = ColumnDataSource(data=dict(  # create and convert dictionary to datas
     positive = positiveAge
 ))
 
-# // 2 different versions of the plot, to re-arrange the data
+# creating plot based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#basic 
+# // 2 different versions of the plot, to re-arrange the data (NOT working in final version)
 
 # 1) figure sorted on y value, from low to high
 sorted_ageQuantile = sorted(ageQuantile, key=lambda x: percentageAge[ageQuantile.index(x)])
@@ -454,13 +472,9 @@ vbar_renderer = p2.vbar(                 # creates bars
     width=0.5, 
     source=sourcep2,            # defines source
     color = 'blue',             # default color of the bars
-
-    # properties of selected / unselected bars
-    #selection_fill_alpha = 1.0,                     # opacity of selected bar
-    #nonselection_fill_alpha=0.2,                    # opacity of non-selected bar
 )
-from bokeh.models.glyphs import VBar
-vbar_selected = VBar(
+
+vbar_selected = VBar(           # defines how a selected bar looks
     fill_alpha = 0.2,
     fill_color = 'blue',
     line_color = 'blue',
@@ -469,16 +483,17 @@ vbar_selected = VBar(
     hatch_alpha = 1.0,
     hatch_weight = 0.5
 )
-vbar_nonselected = VBar(
+vbar_nonselected = VBar(        # defines how a non-selected bar looks
     fill_alpha = 0.2,
     fill_color = 'blue',
     line_color = 'blue'
 )
-vbar_renderer.selection_glyph = vbar_selected
-vbar_renderer.nonselection_glyph = vbar_nonselected
+vbar_renderer.selection_glyph = vbar_selected           # add definition to bars
+vbar_renderer.nonselection_glyph = vbar_nonselected     # add definition to bars
 
 p2.xgrid.grid_line_color = None     # removes gridlines
 
+# based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html#colorpicker 
 picker = ColorPicker(title="Line Color")            # allows to change the color of the bars
 picker.js_link('color', vbar_renderer.selection_glyph, 'fill_color')        # link the selected bar color properties to the selector
 picker.js_link('color', vbar_renderer.selection_glyph, 'line_color')
@@ -488,8 +503,8 @@ picker.js_link('color', vbar_renderer.nonselection_glyph, 'line_color')
 picker.js_link('color', vbar_renderer.glyph, 'fill_color')                  # link the bar color properties to the selector for when no bar has been selected
 picker.js_link('color', vbar_renderer.glyph, 'line_color')
 
-
 # hover tool p2
+# hovertool based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/tools.html#hovertool 
 p2.add_tools(HoverTool(
     tooltips=[
         ('Age quantile', '@x'),
@@ -545,14 +560,12 @@ p3.add_tools(HoverTool(
 # [END] tab 3 - Heat map ----------------------------------------------------------------------------------------------
 
 # tab 4/5/6/7 - splom plot --------------------------------------------------------------------------------------------------
+
 # Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/data.html#pandas
-
-# title of the plot
-
 sourcePos = ColumnDataSource(dfPositive)                    # convert dataframes to datasources
 sourceNeg = ColumnDataSource(dfNegative)
 
-
+# Based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/categorical.html#scatters 
 def scatterPlots(categories):
     TITLE = "Several blood chemicals versus Age quantile"
     figures = []  # list to contain all subplots
@@ -587,21 +600,40 @@ def scatterPlots(categories):
             )
 
         # create dot objects for the points in the plots
-        p = scatter.square(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorPositive, alpha=0.5,
-                           source=sourcePos, muted_alpha=0.1)
-        n = scatter.circle(x=jitter("Patient age quantile", 0.5), y=index, size=4, color=colorNegative, alpha=0.5,
-                           source=sourceNeg, muted_alpha=0.1)
+        p = scatter.square(
+            x=jitter("Patient age quantile", 0.5), 
+            y=index, 
+            size=4, 
+            color=colorPositive, 
+            alpha=0.5,
+            source=sourcePos, muted_alpha=0.1
+        )
+        n = scatter.circle(
+            x=jitter("Patient age quantile", 0.5), 
+            y=index, 
+            size=4, 
+            color=colorNegative, 
+            alpha=0.5,
+            source=sourceNeg, muted_alpha=0.1
+        )
 
         posneg_list += [p]                                      # add dots to list
         posneg_list += [n]
 
         figures.append(scatter)                                 # add figure to the list of subfigures
         count += 1
+
     # Lines with the same color will share a same legend item
-    legend_items = [LegendItem(label="Covid-19 positive",
-                               renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorPositive]),
-                    LegendItem(label="Covid-19 negative",
-                               renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorNegative])]
+    legend_items = [
+        LegendItem(
+            label="Covid-19 positive",
+            renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorPositive]
+        ),
+        LegendItem(
+            label="Covid-19 negative",
+            renderers=[thing for thing in posneg_list if thing.glyph.line_color == colorNegative]
+        )
+    ]
 
     # use a dummy figure for the legend
     dum_fig = figure(plot_width=300, plot_height=600, outline_line_alpha=0, toolbar_location=None)
@@ -640,7 +672,9 @@ title = Div(
 )
 
 text = [title]
+
 # gridplot
+# based on example from documentation: https://docs.bokeh.org/en/latest/docs/user_guide/layout.html#grids-layout-for-plots 
 p = gridplot([[p1, p2], [None, p3]], plot_width=400, plot_height=400, merge_tools = False)
 # plot sizes
 p1.plot_width = 600
