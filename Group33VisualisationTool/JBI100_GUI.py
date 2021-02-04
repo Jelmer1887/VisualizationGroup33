@@ -73,7 +73,18 @@ from bokeh.plotting import figure, curdoc # for the server (option not chosen)
 # - grouping data
 # - computing new data from available columns
 
-df = pd.read_excel(r'dataset.xlsx')         # import all data from the dataset as pandas dataframe
+#!!! As of 4th of Febuary 2021, due to a deprecated function in python 3.9+, 
+# there is a bug in pandas' IO programming that results in a failure to read .xlsx files: 
+# https://stackoverflow.com/questions/64264563/attributeerror-elementtree-object-has-no-attribute-getiterator-when-trying 
+# The elaborate code below serves as a last resort bandate, but it is hard to test and thus might not work. Please use python 3.8 until this is fixed.
+try:
+    print("attemting to read dataset.xlsx...",end=' ')
+    df = pd.read_excel(r'dataset.xlsx')         # import all data from the dataset as pandas dataframe
+    print("completed!")
+except AttributeError:
+    print("'pd.read_excel(dataset.xlsx)' Failed with AttributeError -> retrying with openpyxl engine...",end='')
+    df = pd.read_excel(r'dataset.xlsx', engine='openpyxl')   # bandate for a nasty bug in pandas, introduced with python 3.9+ (https://stackoverflow.com/questions/64264563/attributeerror-elementtree-object-has-no-attribute-getiterator-when-trying)
+    print("completed!")
 
 #columns with too few entries are removed
 del df['Partial thromboplastin time (PTT) '], df['Urine - Sugar'], df['Prothrombin time (PT), Activity'], df['Mycoplasma pneumoniae']
