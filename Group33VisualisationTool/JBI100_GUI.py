@@ -83,7 +83,8 @@ try:
     print("completed!")
 except AttributeError:
     print("'pd.read_excel(dataset.xlsx)' Failed with AttributeError -> retrying with openpyxl engine...",end='')
-    df = pd.read_excel(r'dataset.xlsx', engine='openpyxl')   # bandate for a nasty bug in pandas, introduced with python 3.9+ (https://stackoverflow.com/questions/64264563/attributeerror-elementtree-object-has-no-attribute-getiterator-when-trying)
+    df = pd.read_excel(r'dataset.xlsx', engine='openpyxl')
+    # bandate for a nasty bug in pandas, introduced with python 3.9+ (https://stackoverflow.com/questions/64264563/attributeerror-elementtree-object-has-no-attribute-getiterator-when-trying)
     print("completed!")
 
 #columns with too few entries are removed
@@ -718,7 +719,6 @@ tabs = Tabs(tabs=[tab8, tab1, tab2, tab3, tab4, tab5, tab6, tab7])
 
 layout = layout([[text], [tabs]])
 show(layout)
-print(totalAge)
 
 #curdoc().add_root(layout)
 #bokeh serve --show JBI100_GUI.py
