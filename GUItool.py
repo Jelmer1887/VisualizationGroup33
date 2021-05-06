@@ -18,8 +18,8 @@ from collections import OrderedDict
 plot = figure(tools="pan,wheel_zoom,box_zoom,reset")    # create figure object
 plot.add_tools(BoxSelectTool(dimensions="width"))       # add interactive tools to plot
 output_file("test.html")                                # set output path
-df = pd.read_excel(                                     # dataset path (relative to script)
-    r'archive\dataset.xlsx')
+df = pd.read_excel('archive\dataset.xlsx')              # dataset path (relative to script)
+
 
 #tab 1 - Assignment 4 visualisation
 # !LOOK! the age_quantiles are binned per 4 entries... BUT ITS HARDCODED!!!
